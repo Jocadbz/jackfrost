@@ -68,9 +68,9 @@ async def on_message(message):
 
             if username in rinha_cooldown:
                 if my_file.exists():
-                    await message.channel.send("opaaa ÚwÚ pewa *cries* w-wá, você já apostou. Espewe m-mais um tempo pawa pegaw nyovamente. *sweats*")
+                    await message.channel.send("opaaa ÚwÚ pewa *cries* w-wá, você já apostou. Espewe m-mais um tempo pawa pegaw nyovamente. *sweats* (Dica UWU: d$comprar)")
                 else:
-                    await message.channel.send("Opaaa pera lá, você já apostou. Espere o cooldown acabar.")
+                    await message.channel.send("Opaaa pera lá, você já apostou. Espere o cooldown acabar. (Dica: d$comprar)")
 
             if len(msgsplit) < 3:
                 if my_file.exists():
@@ -81,9 +81,9 @@ async def on_message(message):
             else:
                 if int(msgsplit[1]) > int(open(f"profile/{message.author.id}/coins", "r+").read()):
                     if my_file.exists():
-                        await message.channel.send("Você não tem fundos o s-suficiente pwa apostaw UWU")
+                        await message.channel.send("Você não tem fundos o s-suficiente pwa apostaw UWU (Dica UWU: d$comprar)")
                     else:
-                        await message.channel.send("Você não tem fundos o suficiente pra apostar.")
+                        await message.channel.send("Você não tem fundos o suficiente pra apostar. (Dica: d$comprar)")
                 else:
                     a = msgsplit[2]
                     a = a.replace("<","")
@@ -105,9 +105,9 @@ async def on_message(message):
                                 pass
                         if int(msgsplit[1]) > int(open(f"profile/{user_sent}/coins", "r+").read()):
                             if my_file.exists():
-                                await message.channel.send("me *screeches* pawece que seu o-oponyente não pode cobwiw essa aposta...")
+                                await message.channel.send("me *screeches* pawece que seu o-oponyente não pode cobwiw essa aposta... (Dica UWU: d$comprar)")
                             else:
-                                await message.channel.send("Me parece que seu oponente não pode cobrir essa aposta...")
+                                await message.channel.send("Me parece que seu oponente não pode cobrir essa aposta... (Dica: d$comprar)")
                         else:
                             if my_file.exists():
                                 aposta_message = await message.channel.send(f"**Atenção {msgsplit[2]}, *screeches* o {message.author} quew apostaw {msgsplit[1]} :3 PadowaCoins com você. Weaja a esta mensagem com um e-emoji de d-dedão '👍' em 15 segundos pawa concowdaw com a aposta.**")
@@ -206,9 +206,9 @@ async def on_message(message):
                 user_sent = a.replace("@","") 
                 if int(msgsplit[1]) > int(open(f"profile/{message.author.id}/coins", "r+").read()):
                     if my_file.exists():
-                        await message.channel.send("Você não tem fundos o s-suficiente pwa compwetaw essa t-twansação.")
+                        await message.channel.send("Você não tem fundos o s-suficiente pwa compwetaw essa t-twansação. (Dica UWU: d$comprar)")
                     else:
-                        await message.channel.send("Você não tem fundos o suficiente pra completar essa transação.")
+                        await message.channel.send("Você não tem fundos o suficiente pra completar essa transação. (Dica: d$comprar)")
                 else:
                     try:
                         client.get_user(int(user_sent))
@@ -271,9 +271,9 @@ async def on_message(message):
 
             if username in roleta_cooldown:
                 if my_file.exists():
-                    await message.channel.send("opaaa ÚwÚ pewa *cries* w-wá, você já pegou seu giwo. Espewe m-mais um tempo pawa pegaw nyovamente. *sweats*")
+                    await message.channel.send("opaaa ÚwÚ pewa *cries* w-wá, você já pegou seu giwo. Espewe m-mais um tempo pawa pegaw nyovamente. *sweats* (Dica UWU: d$comprar)")
                 else:
-                    await message.channel.send("Opaaa pera lá, você já pegou seu giro. Espere mais um tempo para pegar novamente.")
+                    await message.channel.send("Opaaa pera lá, você já pegou seu giro. Espere mais um tempo para pegar novamente. (Dica: d$comprar)")
 
             else:
                 if my_file.exists():
@@ -330,9 +330,9 @@ async def on_message(message):
                         bought_one.remove(username)
                     else:
                         if my_file.exists():
-                            await message.channel.send("Ah mais que triste. Você não tem PadolaCoins o suficiente.")
+                            await message.channel.send("Ah mais que triste. Você não tem PadolaCoins o suficiente. (Dica: d$comprar)")
                         else:
-                            await message.channel.send("A-Ah, m-mais que twiste!!11 você não tem PadowaCoins o suficiente. *looks at you*")
+                            await message.channel.send("A-Ah, m-mais que twiste!!11 você não tem PadowaCoins o suficiente. *looks at you* (Dica UWU: d$comprar)")
 
             else:
                 if my_file.exists():
@@ -417,9 +417,9 @@ async def on_message(message):
 
             if username in daily_cooldown:
                 if my_file.exists():
-                    await message.channel.send("opaaa ÚwÚ pewa *cries* w-wá, você já pegou seus Denji Coins diáwios. Espewe m-mais um tempo pawa pegaw nyovamente. *sweats*")
+                    await message.channel.send("opaaa ÚwÚ pewa *cries* w-wá, você já pegou seus Denji Coins diáwios. Espewe m-mais um tempo pawa pegaw nyovamente. *sweats* (Dica UWU: d$comprar)")
                 else:
-                    await message.channel.send("Opaaa pera lá, você já pegou seus Denji Coins diários. Espere mais um tempo para pegar novamente.")
+                    await message.channel.send("Opaaa pera lá, você já pegou seus Denji Coins diários. Espere mais um tempo para pegar novamente. (Dica: d$comprar)")
 
             else:
                 current_coins = open(f"profile/{message.author.id}/coins", "r+").read()
@@ -494,6 +494,24 @@ async def on_message(message):
         msgsplit = user_message.lower().split() 
         if "d$suro" == msgsplit[0]:
             await message.channel.send("https://media.discordapp.net/attachments/804443142879182871/941984752603398154/image0-156.gif")
+            if username not in bought_one:
+                users_on_cooldown.append(username)
+                await asyncio.sleep(cooldown_command) # time in seconds
+                users_on_cooldown.remove(username)
+            else:
+                pass
+        else:
+            pass
+    elif "d$comprar" in user_message.lower() and not username in users_on_cooldown:
+        msgsplit = user_message.lower().split() 
+        if "d$comprar" == msgsplit[0]:
+            thing = """Ficou sem dinheiro apostando com o ADM? Agora você pode realizar a compra de PadolaCoins!
+Comprar PadolaCoins é um jeito de ajudar o bot a continuar online, ajuda o criador a pagar as contas, e principalmente,
+nos ajuda a continuar desenvolvendo!
+
+Para comprar, chame o criador do DenjiBot (@jocadbz) na DM. O valor é negociável."""
+            await message.channel.send(thing)
+            await message.channel.send("https://tenor.com/view/mlem-silly-goofy-cat-silly-cat-goofy-gif-27564930")
             if username not in bought_one:
                 users_on_cooldown.append(username)
                 await asyncio.sleep(cooldown_command) # time in seconds
