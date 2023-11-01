@@ -47,6 +47,80 @@ async def on_message(message):
     if message.author == client.user: 
         return
 
+    elif "d$doar" in user_message.lower() and not username in users_on_cooldown:
+        msgsplit = user_message.lower().split()
+
+        if "d$doar" == msgsplit[0]:
+            if Path(f"profile/{message.author.id}").exists() == False:
+                os.makedirs(f"profile/{message.author.id}")
+                with open(f'profile/{message.author.id}/user', 'w') as f:
+                    f.write(str(message.author.id))
+                with open(f'profile/{message.author.id}/coins', 'w') as f:
+                    f.write("0")
+                if my_file.exists():
+                    await message.channel.send("seu ^w^ pewfiw ^-^ foi cwiado?!! Mande o comando nyovamente. *sweats*")
+                else:
+                    await message.channel.send("Seu perfil foi criado! Mande o comando novamente.")
+            else:
+                pass
+            
+            if len(msgsplit) < 3:
+                if my_file.exists():
+                    await message.channel.send("opa ÚwÚ patwão, escweve diweito. O comando é 'd$doawr <quantidade> <pessoa>'")
+                else:
+                    await message.channel.send("Opa patrão, escreve direito. O comando é 'd$doar <quantidade> <pessoa>'")
+
+
+            else:
+                a = msgsplit[2]
+                a = a.replace("<","")
+                a = a.replace(">","")
+                user_sent = a.replace("@","") 
+                if int(msgsplit[1]) > int(open(f"profile/{message.author.id}/coins", "r+").read()):
+                    if my_file.exists():
+                        await message.channel.send("Você não tem fundos o s-suficiente pwa compwetaw essa t-twansação.")
+                    else:
+                        await message.channel.send("Você não tem fundos o suficiente pra completar essa transação.")
+                else:
+                    try:
+                        client.get_user(int(user_sent))
+                    except ValueError:
+                        await message.channel.send(f"Tem certeza de que esse user existe?")
+                    else:
+                        if client.get_user(int(user_sent)) is not None: # find ID by right clicking on a user and choosing "copy id" at the bottom
+                            if Path(f"profile/{user_sent}").exists() == False:
+                                os.makedirs(f"profile/{user_sent}")
+                                with open(f'profile/{user_sent}/user', 'w') as f:
+                                    f.write(str(user_sent))
+                                with open(f'profile/{user_sent}/coins', 'w') as f:
+                                    f.write("0")
+                            else:
+                                pass
+                            current_coins = open(f"profile/{message.author.id}/coins", "r+").read()
+                            new_coins = int(current_coins)-int(msgsplit[1])
+                            current_coins_user = open(f"profile/{user_sent}/coins", "r+").read()
+                            new_coins_user = int(current_coins_user)+int(msgsplit[1])
+                            with open(f'profile/{message.author.id}/coins', 'w') as f:
+                                f.write(str(new_coins))
+                            with open(f'profile/{user_sent}/coins', 'w') as f:
+                                f.write(str(new_coins_user))
+                            if my_file.exists():
+                                await message.channel.send(f"Você twansfewiu *looks at you* {msgsplit[1]} :3 Padowa *walks away* coins pawa {msgsplit[2]}!")
+                            else:
+                                await message.channel.send(f"Você transferiu {msgsplit[1]} Padola coins para {msgsplit[2]}!")
+                        else:
+                            await message.channel.send(f"Tem certeza de que esse user existe?")
+
+            if username not in bought_one:
+                users_on_cooldown.append(username)
+                await asyncio.sleep(cooldown_command) # time in seconds
+                users_on_cooldown.remove(username)
+            else:
+                pass    
+
+        else:
+            pass
+
     elif "d$roleta" in user_message.lower() and not username in users_on_cooldown:
         msgsplit = user_message.lower().split() 
         if "d$roleta" == msgsplit[0]:
@@ -56,7 +130,10 @@ async def on_message(message):
                     f.write(str(message.author.id))
                 with open(f'profile/{message.author.id}/coins', 'w') as f:
                     f.write("0")
-                await message.channel.send("Seu perfil foi criado! Mande o comando novamente.")
+                if my_file.exists():
+                    await message.channel.send("seu ^w^ pewfiw ^-^ foi cwiado?!! Mande o comando nyovamente. *sweats*")
+                else:
+                    await message.channel.send("Seu perfil foi criado! Mande o comando novamente.")
             else:
                 pass
             
@@ -65,10 +142,16 @@ async def on_message(message):
             resultado = random.choice(roleta_random)
 
             if username in roleta_cooldown:
-                await message.channel.send("Opaaa pera lá, você já pegou seu giro. Espere mais um tempo para pegar novamente.")
+                if my_file.exists():
+                    await message.channel.send("opaaa ÚwÚ pewa *cries* w-wá, você já pegou seu giwo. Espewe m-mais um tempo pawa pegaw nyovamente. *sweats*")
+                else:
+                    await message.channel.send("Opaaa pera lá, você já pegou seu giro. Espere mais um tempo para pegar novamente.")
 
             else:
-                await message.channel.send(f"O resultado da sua roleta foi... {resultado} PadolaCoins!")
+                if my_file.exists():
+                    await message.channel.send(f"O wesuwtado da s-s-sua w-woweta foi... {resultado} PadowaCoins?!?1")
+                else:
+                    await message.channel.send(f"O resultado da sua roleta foi... {resultado} PadolaCoins!")
                 current_coins = open(f"profile/{message.author.id}/coins", "r+").read()
                 new_coins = int(current_coins)+resultado
                 with open(f'profile/{message.author.id}/coins', 'w') as f:
@@ -97,7 +180,10 @@ async def on_message(message):
                     f.write(str(message.author.id))
                 with open(f'profile/{message.author.id}/coins', 'w') as f:
                     f.write("0")
-                await message.channel.send("Seu perfil foi criado! Mande o comando novamente.")
+                if my_file.exists():
+                    await message.channel.send("seu ^w^ pewfiw ^-^ foi cwiado?!! Mande o comando nyovamente. *sweats*")
+                else:
+                    await message.channel.send("Seu perfil foi criado! Mande o comando novamente.")
             else:
                 pass
             if len(msgsplit) == 2:
@@ -107,24 +193,42 @@ async def on_message(message):
                         new_coins = int(current_coins)-1000
                         with open(f'profile/{message.author.id}/coins', 'w') as f:
                             f.write(str(new_coins))
-                        await message.channel.send("Você comprou o benefício 1.")
+                        if my_file.exists():
+                            await message.channel.send("Você compwou o benyefício 1.")
+                        else:
+                            await message.channel.send("Você comprou o benefício 1.")
                         bought_one.append(username)
                         await asyncio.sleep(2500) # time in seconds
                         bought_one.remove(username)
                     else:
-                        await message.channel.send("Ah, mais que triste! você não tem PadolaCoins o suficiente.")
+                        if my_file.exists():
+                            await message.channel.send("Ah mais que triste. Você não tem PadolaCoins o suficiente.")
+                        else:
+                            await message.channel.send("A-Ah, m-mais que twiste!!11 você não tem PadowaCoins o suficiente. *looks at you*")
 
             else:
-                embed = discord.Embed(title="Lojinha do Denji",
-                                      description="Compre benefícios com seus Padola Coins aqui! - Mande o comando '$lojinha 1' para comprar!",
-                                      colour=0x00b0f4)
+                if my_file.exists():
+                    embed = discord.Embed(title="wojinha *huggles tightly* do Denji",
+                                          description="compwe >w< benyefícios :3 com seus Padowa *walks away* Coins aqui?!?! - Mande o comando 'd$lojinha 1' pawa compwaw!!11 *screeches*",
+                                          colour=0x00b0f4)
 
-                embed.add_field(name="I - Special Cooldown",
-                                value="Não seja afetado pelo cooldown por 40 minutos - 1000 PadolaCoins",
-                                inline=False)
+                    embed.add_field(name="I - Speciaw Coowdown",
+                                    value="Não seja afetado pewo coowdown pow 40 m-minyutos - 1000 PadowaCoins",
+                                    inline=False)
 
-                embed.set_footer(text="Denji-kun Bot",
-                                 icon_url=client.user.display_avatar)
+                    embed.set_footer(text="Denji-kun Bot",
+                                     icon_url=client.user.display_avatar)
+                else:
+                    embed = discord.Embed(title="Lojinha do Denji",
+                                          description="Compre benefícios com seus Padola Coins aqui! - Mande o comando '$lojinha 1' para comprar!",
+                                          colour=0x00b0f4)
+
+                    embed.add_field(name="I - Special Cooldown",
+                                    value="Não seja afetado pelo cooldown por 40 minutos - 1000 PadolaCoins",
+                                    inline=False)
+
+                    embed.set_footer(text="Denji-kun Bot",
+                                     icon_url=client.user.display_avatar)
 
                 await message.channel.send(embed=embed)
 
@@ -140,7 +244,10 @@ async def on_message(message):
                     f.write(str(message.author.id))
                 with open(f'profile/{message.author.id}/coins', 'w') as f:
                     f.write("0")
-                await message.channel.send("Seu perfil foi criado. Mande o comando novamente.")
+                if my_file.exists():
+                    await message.channel.send("seu ^w^ pewfiw ^-^ foi cwiado. ^w^ Mande o comando nyovamente. *sweats*")
+                else:
+                    await message.channel.send("Seu perfil foi criado. Mande o comando novamente.")
             else:
                 embed = discord.Embed(title=f"Perfil do {username}",
                       colour=0x00b0f4)
@@ -173,19 +280,28 @@ async def on_message(message):
                     f.write(str(message.author.id))
                 with open(f'profile/{message.author.id}/coins', 'w') as f:
                     f.write("0")
-                await message.channel.send("Your profile has been created! Try the command again.")
+                if my_file.exists():
+                    await message.channel.send("seu ^w^ pewfiw ^-^ foi cwiado. ^w^ Mande o comando nyovamente. *sweats*")
+                else:
+                    await message.channel.send("Seu perfil foi criado. Mande o comando novamente.")
             else:
                 pass
 
             if username in daily_cooldown:
-                await message.channel.send("Opaaa pera lá, você já pegou seus Denji Coins diários. Espere mais um tempo para pegar novamente.")
+                if my_file.exists():
+                    await message.channel.send("opaaa ÚwÚ pewa *cries* w-wá, você já pegou seus Denji Coins diáwios. Espewe m-mais um tempo pawa pegaw nyovamente. *sweats*")
+                else:
+                    await message.channel.send("Opaaa pera lá, você já pegou seus Denji Coins diários. Espere mais um tempo para pegar novamente.")
 
             else:
                 current_coins = open(f"profile/{message.author.id}/coins", "r+").read()
                 new_coins = int(current_coins)+20
                 with open(f'profile/{message.author.id}/coins', 'w') as f:
                     f.write(str(new_coins))
-                await message.channel.send(f"Você ganhou 20 PadolaCoins!")
+                if my_file.exists():
+                    await message.channel.send(f"Você ganhou 20 PadowaCoins?!?1")
+                else:
+                    await message.channel.send(f"Você ganhou 20 PadolaCoins!")
                 daily_cooldown.append(username)
                 await asyncio.sleep(2500)
                 daily_cooldown.remove(username)
@@ -212,10 +328,10 @@ async def on_message(message):
 #            await message.channel.send("""Shadow o ouriço é um filha da puta do caralho, ele mijou na porra da minha esposa, isso mesmo, ele pegou a porra do pinto espinhoso dele e mijou na porra da minha esposa e disse que o pau dele era dessa tamanho e eu disse "Credo, que nojo" então estou fazendo um exposed no meu twitter.com. Shadow o ouriço, você tem um pau pequeno, que é do tamanho desta noz só que muito menor, e adivinha, olha o tamanho do meu pirocão. Isso mesmo bebê, pontas altas, sem pelos, sem espinhos, olha só, parecem 2 bolas e 1 torpedo. Ele fodeu a minha esposa, então adivinhem, eu vou foder a terra, isso mesmo, isso que você ganha, meu super laser de mijo. Exceto que eu não vou mijar na terra, eu vou mijar na lua, você gostou disto Lula, eu mijei na lua, faz o L agora. vocês tem 23 horas antes que os meus perdigotos de mijo atinjam a Terra. Agora saiam da porra da minha frente, antes que eu mije em vocês também""")            
     elif "peitos" in user_message.lower() and not username in users_on_cooldown:
         if my_file.exists(): 
-            jokes = "P-PEITOS!? aONDE?!?1 *sweats* PEITOS PEITOS PEITOS PEITOS AAAAAAAAAAAAAA UWU"
+            jokes = ["PEITOS?!?! aONDE?!?1 *sweats* PEITOS PEITOS PEITOS PEITOS AAAAAAAAAAAAAA", "São >w< tão macios... quewia pegaw em uns peitos...", "EU QUEWO PEITOOOOOOOOOOS", "Sou o maiow fã de peitos do mundo"]
         else:
-            jokes = "PEITOS???? AONDE?????? PEITOS PEITOS PEITOS PEITOS AAAAAAAAAAAAAA"
-        await message.channel.send(jokes)
+            jokes = ["PEITOS???? AONDE?????? PEITOS PEITOS PEITOS PEITOS AAAAAAAAAAAAAA", "São tão macios... queria pegar em uns peitos...", "EU QUERO PEITOOOOOOOOOOS", "Sou o maior fã de peitos do mundo"]
+        await message.channel.send(random.choice(jokes))
         if username not in bought_one:
             users_on_cooldown.append(username)
             await asyncio.sleep(cooldown_command) # time in seconds
@@ -234,18 +350,18 @@ async def on_message(message):
             users_on_cooldown.remove(username)
         else:
             pass
-    elif "gojo" in user_message.lower() and not username in users_on_cooldown:
-        if "d$battle" in user_message.lower():
-            pass
-        else: 
-            jokes = "https://media.discordapp.net/attachments/767851776212336642/1169032788557697244/have-a-break-have-a-kit-kat-v0-gyreqrrlk6wb1.png?ex=6553eda0&is=654178a0&hm=4fd1d5a7f177aff730ea9104d2b72e14a9339483f5b482dce0ffdb3b88463046&=&width=344&height=459"
-            await message.channel.send(jokes, reference=message)
-        if username not in bought_one:
-            users_on_cooldown.append(username)
-            await asyncio.sleep(cooldown_command) # time in seconds
-            users_on_cooldown.remove(username)
-        else:
-            pass
+#    elif "gojo" in user_message.lower() and not username in users_on_cooldown:
+#        if "d$battle" in user_message.lower():
+#            pass
+#        else: 
+#            jokes = "https://media.discordapp.net/attachments/767851776212336642/1169032788557697244/have-a-break-have-a-kit-kat-v0-gyreqrrlk6wb1.png?ex=6553eda0&is=654178a0&hm=4fd1d5a7f177aff730ea9104d2b72e14a9339483f5b482dce0ffdb3b88463046&=&width=344&height=459"
+#            await message.channel.send(jokes, reference=message)
+#        if username not in bought_one:
+#            users_on_cooldown.append(username)
+#            await asyncio.sleep(cooldown_command) # time in seconds
+#            users_on_cooldown.remove(username)
+#        else:
+#            pass
     elif "d$suro" in user_message.lower() and not username in users_on_cooldown:
         msgsplit = user_message.lower().split() 
         if "d$suro" == msgsplit[0]:
@@ -311,17 +427,23 @@ async def on_message(message):
         msgsplit = user_message.lower().split() 
         rand1 = [0, 1]
         if "d$battle" == msgsplit[0]:
-            if "gojo" == msgsplit[1] or "gojo" == msgsplit[2]:
-                if my_file.exists():
-                    await message.channel.send("Não pwecisa nyem *starts twerking* de pwevisão, o gojo *screams* é buxa dms kkkkkkkkk")
+            if my_file.exists():
+                if random.choice(rand1) == 0:
+                    comeco = ["Foi pow pouco, mas ", "E com gwande fowga ", "Foi uma wuta justa, mas "]
+                    fim = ["esmagando seu c-cwânyio", "abwindo um buwaco em seu peito.", "decepando s-s-sua cabeça."]
+                    jokes = f"{random.choice(comeco)}{msgsplit[1]} ganhow a l-luta contwa {msgsplit[2]} {random.choice(fim)}"
+                    await message.channel.send(jokes)
                     if username not in bought_one:
-                        users_on_cooldown.append(username)
-                        await asyncio.sleep(cooldown_command) # time in seconds
-                        users_on_cooldown.remove(username)
+                       users_on_cooldown.append(username)
+                       await asyncio.sleep(cooldown_command) # time in seconds
+                       users_on_cooldown.remove(username)
                     else:
                         pass
                 else:
-                    await message.channel.send("Não precisa nem de previsão, o gojo é buxa dms kkkkkkkkk")
+                    comeco = ["Foi pow pouco, mas ", "E com gwande fowga ", "Foi uma wuta justa, mas "]
+                    fim = ["esmagando seu c-cwânyio", "abwindo um buwaco em seu peito.", "decepando s-s-sua cabeça.", "desintegwando seu cowpo.", "sewwando seu c-cowpo ao meio."]
+                    jokes = f"{random.choice(comeco)}{msgsplit[2]} ganhow a l-luta contwa {msgsplit[1]} {random.choice(fim)}"
+                    await message.channel.send(jokes)
                     if username not in bought_one:
                         users_on_cooldown.append(username)
                         await asyncio.sleep(cooldown_command) # time in seconds
@@ -329,52 +451,28 @@ async def on_message(message):
                     else:
                         pass
             else:
-                if my_file.exists():
-                    if random.choice(rand1) == 0:
-                        comeco = ["Foi pow pouco, mas ", "E com gwande fowga ", "Foi uma wuta justa, mas "]
-                        fim = ["esmagando seu c-cwânyio", "abwindo um buwaco em seu peito.", "decepando s-s-sua cabeça."]
-                        jokes = f"{random.choice(comeco)}{msgsplit[1]} ganhow a l-luta contwa {msgsplit[2]} {random.choice(fim)}"
-                        await message.channel.send(jokes)
-                        if username not in bought_one:
-                            users_on_cooldown.append(username)
-                            await asyncio.sleep(cooldown_command) # time in seconds
-                            users_on_cooldown.remove(username)
-                        else:
-                            pass
+                if random.choice(rand1) == 0:
+                    comeco = ["Foi por pouco, mas ", "E com grande folga, ", "Foi uma luta justa, mas "]
+                    fim = ["esmagando seu crânio.", "abrindo um buraco em seu peito.", "decepando sua cabeça."]
+                    jokes = f"{random.choice(comeco)}{msgsplit[1]} ganhou a luta contra {msgsplit[2]} {random.choice(fim)}"
+                    await message.channel.send(jokes)
+                    if username not in bought_one:
+                        users_on_cooldown.append(username)
+                        await asyncio.sleep(cooldown_command) # time in seconds
+                        users_on_cooldown.remove(username)
                     else:
-                        comeco = ["Foi pow pouco, mas ", "E com gwande fowga ", "Foi uma wuta justa, mas "]
-                        fim = ["esmagando seu c-cwânyio", "abwindo um buwaco em seu peito.", "decepando s-s-sua cabeça.", "desintegwando seu cowpo.", "sewwando seu c-cowpo ao meio."]
-                        jokes = f"{random.choice(comeco)}{msgsplit[2]} ganhow a l-luta contwa {msgsplit[1]} {random.choice(fim)}"
-                        await message.channel.send(jokes)
-                        if username not in bought_one:
-                            users_on_cooldown.append(username)
-                            await asyncio.sleep(cooldown_command) # time in seconds
-                            users_on_cooldown.remove(username)
-                        else:
-                            pass
+                        pass
                 else:
-                    if random.choice(rand1) == 0:
-                        comeco = ["Foi por pouco, mas ", "E com grande folga, ", "Foi uma luta justa, mas "]
-                        fim = ["esmagando seu crânio.", "abrindo um buraco em seu peito.", "decepando sua cabeça."]
-                        jokes = f"{random.choice(comeco)}{msgsplit[1]} ganhou a luta contra {msgsplit[2]} {random.choice(fim)}"
-                        await message.channel.send(jokes)
-                        if username not in bought_one:
-                            users_on_cooldown.append(username)
-                            await asyncio.sleep(cooldown_command) # time in seconds
-                            users_on_cooldown.remove(username)
-                        else:
-                            pass
+                    comeco = ["Foi por pouco, mas ", "E com grande folga, ", "Foi uma luta justa, mas "]
+                    fim = ["esmagando seu crânio.", "abrindo um buraco em seu peito.", "decepando sua cabeça.", "desintegrando seu corpo.", "serrando seu corpo ao meio."]
+                    jokes = f"{random.choice(comeco)}{msgsplit[2]} ganhou a luta contra {msgsplit[1]} {random.choice(fim)}"
+                    await message.channel.send(jokes)
+                    if username not in bought_one:
+                        users_on_cooldown.append(username)
+                        await asyncio.sleep(cooldown_command) # time in seconds
+                        users_on_cooldown.remove(username)
                     else:
-                        comeco = ["Foi por pouco, mas ", "E com grande folga, ", "Foi uma luta justa, mas "]
-                        fim = ["esmagando seu crânio.", "abrindo um buraco em seu peito.", "decepando sua cabeça.", "desintegrando seu corpo.", "serrando seu corpo ao meio."]
-                        jokes = f"{random.choice(comeco)}{msgsplit[2]} ganhou a luta contra {msgsplit[1]} {random.choice(fim)}"
-                        await message.channel.send(jokes)
-                        if username not in bought_one:
-                            users_on_cooldown.append(username)
-                            await asyncio.sleep(cooldown_command) # time in seconds
-                            users_on_cooldown.remove(username)
-                        else:
-                            pass    
+                        pass    
         else:
             pass
     elif "d$uwu" in user_message.lower() and not username in users_on_cooldown:
