@@ -313,101 +313,108 @@ A-Ative o modo UWU
                     a = msgsplit[2]
                     a = a.replace("<","")
                     a = a.replace(">","")
-                    user_sent = a.replace("@","") 
-                    try:
-                        client.get_user(int(user_sent))
-                    except ValueError:
-                        await message.channel.send(f"Tem certeza de que esse user existe?")
-                    else:
-                        if client.get_user(int(user_sent)) is not None: # find ID by right clicking on a user and choosing "copy id" at the bottom
-                            if Path(f"profile/{user_sent}").exists() == False:
-                                os.makedirs(f"profile/{user_sent}")
-                                with open(f'profile/{user_sent}/user', 'w') as f:
-                                    f.write(str(user_sent))
-                                with open(f'profile/{user_sent}/coins', 'w') as f:
-                                    f.write("0")
-                            else:
-                                pass
-                            if Path(f"profile/{user_sent}/duelos").exists() == False:
-                                with open(f'profile/{user_sent}/duelos', 'w') as f:
-                                    f.write("0")
-                            else:
-                                pass
-                        if int(msgsplit[1]) > int(open(f"profile/{user_sent}/coins", "r+").read()):
-                            if my_file.exists():
-                                await message.channel.send("me *screeches* pawece que seu o-oponyente não pode cobwiw essa aposta... (Dica UWU: d$comprar)")
-                            else:
-                                await message.channel.send("Me parece que seu oponente não pode cobrir essa aposta... (Dica: d$comprar)")
+                    user_sent = a.replace("@","")
+                    if int(user_sent) == message.author.id:
+                        if my_file.exists():
+                            await message.channel.send("Você não pode apostaw com você mesmo.")
                         else:
-                            if my_file.exists():
-                                aposta_message = await message.channel.send(f"**Atenção {msgsplit[2]}, *screeches* o {message.author} quew apostaw {msgsplit[1]} :3 PadowaCoins com você. Weaja a esta mensagem com um e-emoji de d-dedão '👍' em 15 segundos pawa concowdaw com a aposta.**")
-                            else:
-                                aposta_message = await message.channel.send(f"**Atenção {msgsplit[2]}, o {message.author} quer apostar {msgsplit[1]} PadolaCoins com você. Reaja a esta mensagem com um emoji de dedão '👍' em 15 segundos para concordar com a aposta.**")
-                            await aposta_message.add_reaction('👍')
+                            await message.channel.send("Você não pode apostar com você mesmo.")
+                    else:
 
-                            def check(reaction, user):
-                                return user == client.get_user(int(user_sent)) and str(reaction.emoji) == '👍'
-                            try:
-                                reaction, user = await client.wait_for('reaction_add', timeout=15.0, check=check)
-                            except asyncio.TimeoutError:
-                                if my_file.exists():
-                                    await message.channel.send("Aposta c-cancewada UWU")
-                                else:
-                                    await message.channel.send("Aposta cancelada")
-                            else:
-                                if my_file.exists():
-                                    await message.channel.send(f"O Ganhadow foi...")
-                                else:
-                                    await message.channel.send(f"O Ganhador foi...")
-                                things = ["win", "lose", "win", "lose"]
-                                resultado = random.choice(things)
-                                if resultado == 'win':
-                                    if my_file.exists():
-                                        await message.channel.send(f"{message.author}!!11 Pawabéns, você ganhou {msgsplit[1]} :3 PadowaCoins?!?1")
-                                    else:
-                                        await message.channel.send(f"{message.author}! Parabéns, você ganhou {msgsplit[1]} PadolaCoins!")
-                                    current_coins = open(f"profile/{message.author.id}/coins", "r+").read()
-                                    new_coins = int(current_coins)+int(msgsplit[1])
-                                    current_coins_user = open(f"profile/{user_sent}/coins", "r+").read()
-                                    new_coins_user = int(current_coins_user)-int(msgsplit[1])
-                                    with open(f'profile/{message.author.id}/coins', 'w') as f:
-                                        f.write(str(new_coins))
+                        try:
+                            client.get_user(int(user_sent))
+                        except ValueError:
+                            await message.channel.send(f"Tem certeza de que esse user existe?")
+                        else:
+                            if client.get_user(int(user_sent)) is not None: # find ID by right clicking on a user and choosing "copy id" at the bottom
+                                if Path(f"profile/{user_sent}").exists() == False:
+                                    os.makedirs(f"profile/{user_sent}")
+                                    with open(f'profile/{user_sent}/user', 'w') as f:
+                                        f.write(str(user_sent))
                                     with open(f'profile/{user_sent}/coins', 'w') as f:
-                                        f.write(str(new_coins_user))
-                                    current_duels_user = open(f"profile/{message.author.id}/duelos", "r+").read()
-                                    new_duels_user = int(current_duels_user)+1
-                                    with open(f'profile/{message.author.id}/duelos', 'w') as f:
-                                        f.write(str(new_duels_user))
-                                    if username not in bought_two:
-                                        rinha_cooldown.append(username)
-                                        await asyncio.sleep(15) # time in seconds
-                                        rinha_cooldown.remove(username)
-                                    else:
-                                        pass
-
+                                        f.write("0")
                                 else:
-                                    if my_file.exists():
-                                        await message.channel.send(f"{msgsplit[2]}!!11 Pawabéns, você ganhou {msgsplit[1]} :3 PadowaCoins?!?1")
-                                    else:
-                                        await message.channel.send(f"{msgsplit[2]}! Parabéns, você ganhou {msgsplit[1]} PadolaCoins!")
-                                    current_coins = open(f"profile/{message.author.id}/coins", "r+").read()
-                                    new_coins = int(current_coins)-int(msgsplit[1])
-                                    current_coins_user = open(f"profile/{user_sent}/coins", "r+").read()
-                                    new_coins_user = int(current_coins_user)+int(msgsplit[1])
-                                    with open(f'profile/{message.author.id}/coins', 'w') as f:
-                                        f.write(str(new_coins))
-                                    with open(f'profile/{user_sent}/coins', 'w') as f:
-                                        f.write(str(new_coins_user))
-                                    current_duels_user = open(f"profile/{user_sent}/duelos", "r+").read()
-                                    new_duels_user = int(current_duels_user)+1
+                                    pass
+                                if Path(f"profile/{user_sent}/duelos").exists() == False:
                                     with open(f'profile/{user_sent}/duelos', 'w') as f:
-                                        f.write(str(new_duels_user))
-                                    if username not in bought_two:
-                                        rinha_cooldown.append(username)
-                                        await asyncio.sleep(15) # time in seconds
-                                        rinha_cooldown.remove(username)
+                                        f.write("0")
+                                else:
+                                    pass
+                            if int(msgsplit[1]) > int(open(f"profile/{user_sent}/coins", "r+").read()):
+                                if my_file.exists():
+                                    await message.channel.send("me *screeches* pawece que seu o-oponyente não pode cobwiw essa aposta... (Dica UWU: d$comprar)")
+                                else:
+                                    await message.channel.send("Me parece que seu oponente não pode cobrir essa aposta... (Dica: d$comprar)")
+                            else:
+                                if my_file.exists():
+                                    aposta_message = await message.channel.send(f"**Atenção {msgsplit[2]}, *screeches* o {message.author} quew apostaw {msgsplit[1]} :3 PadowaCoins com você. Weaja a esta mensagem com um e-emoji de d-dedão '👍' em 15 segundos pawa concowdaw com a aposta.**")
+                                else:
+                                    aposta_message = await message.channel.send(f"**Atenção {msgsplit[2]}, o {message.author} quer apostar {msgsplit[1]} PadolaCoins com você. Reaja a esta mensagem com um emoji de dedão '👍' em 15 segundos para concordar com a aposta.**")
+                                await aposta_message.add_reaction('👍')
+
+                                def check(reaction, user):
+                                    return user == client.get_user(int(user_sent)) and str(reaction.emoji) == '👍'
+                                try:
+                                    reaction, user = await client.wait_for('reaction_add', timeout=15.0, check=check)
+                                except asyncio.TimeoutError:
+                                    if my_file.exists():
+                                        await message.channel.send("Aposta c-cancewada UWU")
                                     else:
-                                        pass
+                                        await message.channel.send("Aposta cancelada")
+                                else:
+                                    if my_file.exists():
+                                        await message.channel.send(f"O Ganhadow foi...")
+                                    else:
+                                        await message.channel.send(f"O Ganhador foi...")
+                                    things = ["win", "lose", "win", "lose"]
+                                    resultado = random.choice(things)
+                                    if resultado == 'win':
+                                        if my_file.exists():
+                                            await message.channel.send(f"{message.author}!!11 Pawabéns, você ganhou {msgsplit[1]} :3 PadowaCoins?!?1")
+                                        else:
+                                            await message.channel.send(f"{message.author}! Parabéns, você ganhou {msgsplit[1]} PadolaCoins!")
+                                        current_coins = open(f"profile/{message.author.id}/coins", "r+").read()
+                                        new_coins = int(current_coins)+int(msgsplit[1])
+                                        current_coins_user = open(f"profile/{user_sent}/coins", "r+").read()
+                                        new_coins_user = int(current_coins_user)-int(msgsplit[1])
+                                        with open(f'profile/{message.author.id}/coins', 'w') as f:
+                                            f.write(str(new_coins))
+                                        with open(f'profile/{user_sent}/coins', 'w') as f:
+                                            f.write(str(new_coins_user))
+                                        current_duels_user = open(f"profile/{message.author.id}/duelos", "r+").read()
+                                        new_duels_user = int(current_duels_user)+1
+                                        with open(f'profile/{message.author.id}/duelos', 'w') as f:
+                                            f.write(str(new_duels_user))
+                                        if username not in bought_two:
+                                            rinha_cooldown.append(username)
+                                            await asyncio.sleep(15) # time in seconds
+                                            rinha_cooldown.remove(username)
+                                        else:
+                                            pass
+
+                                    else:
+                                        if my_file.exists():
+                                            await message.channel.send(f"{msgsplit[2]}!!11 Pawabéns, você ganhou {msgsplit[1]} :3 PadowaCoins?!?1")
+                                        else:
+                                            await message.channel.send(f"{msgsplit[2]}! Parabéns, você ganhou {msgsplit[1]} PadolaCoins!")
+                                        current_coins = open(f"profile/{message.author.id}/coins", "r+").read()
+                                        new_coins = int(current_coins)-int(msgsplit[1])
+                                        current_coins_user = open(f"profile/{user_sent}/coins", "r+").read()
+                                        new_coins_user = int(current_coins_user)+int(msgsplit[1])
+                                        with open(f'profile/{message.author.id}/coins', 'w') as f:
+                                            f.write(str(new_coins))
+                                        with open(f'profile/{user_sent}/coins', 'w') as f:
+                                            f.write(str(new_coins_user))
+                                        current_duels_user = open(f"profile/{user_sent}/duelos", "r+").read()
+                                        new_duels_user = int(current_duels_user)+1
+                                        with open(f'profile/{user_sent}/duelos', 'w') as f:
+                                            f.write(str(new_duels_user))
+                                        if username not in bought_two:
+                                            rinha_cooldown.append(username)
+                                            await asyncio.sleep(15) # time in seconds
+                                            rinha_cooldown.remove(username)
+                                        else:
+                                            pass
 
 
             if username not in bought_one:
@@ -481,16 +488,21 @@ A-Ative o modo UWU
                                 pass
                             current_coins = open(f"profile/{message.author.id}/coins", "r+").read()
                             new_coins = int(current_coins)-int(msgsplit[1])
+                            imposto = int(msgsplit[1]) * 0.05
                             current_coins_user = open(f"profile/{user_sent}/coins", "r+").read()
                             new_coins_user = int(current_coins_user)+int(msgsplit[1])
+                            new_coins_user = new_coins_user * 0.95
+                            joca_coins = int(open(f"profile/727194765610713138/coins", "r+").read())+imposto 
                             with open(f'profile/{message.author.id}/coins', 'w') as f:
-                                f.write(str(new_coins))
+                                f.write(str(int(new_coins)))
                             with open(f'profile/{user_sent}/coins', 'w') as f:
-                                f.write(str(new_coins_user))
+                                f.write(str(int(new_coins_user)))
+                            with open(f'profile/727194765610713138/coins', 'w') as f:
+                                f.write(str(int(joca_coins)))
                             if my_file.exists():
-                                await message.channel.send(f"Você twansfewiu *looks at you* {msgsplit[1]} :3 Padowa *walks away* coins pawa {msgsplit[2]}!")
+                                await message.channel.send(f"Você twansfewiu *looks at you* {msgsplit[1]} :3 Padowa *walks away* coins pawa {msgsplit[2]}! (imposto cobwado: {str(int(imposto))} PadowaCoins)")
                             else:
-                                await message.channel.send(f"Você transferiu {msgsplit[1]} Padola coins para {msgsplit[2]}!")
+                                await message.channel.send(f"Você transferiu {msgsplit[1]} Padola coins para {msgsplit[2]}! (Imposto cobrado: {str(int(imposto))} PadolaCoins)")
                         else:
                             await message.channel.send(f"Tem certeza de que esse user existe?")
 
@@ -689,60 +701,113 @@ A-Ative o modo UWU
     elif "d$profile" in user_message.lower() and not username in users_on_cooldown:
         msgsplit = user_message.lower().split() 
         if "d$profile" == msgsplit[0]:
-            if Path(f"profile/{message.author.id}").exists() == False:
-                os.makedirs(f"profile/{message.author.id}")
-                with open(f'profile/{message.author.id}/user', 'w') as f:
-                    f.write(str(message.author.id))
-                with open(f'profile/{message.author.id}/coins', 'w') as f:
-                    f.write("0")
-                if Path(f"profile/{message.author.id}/duelos").exists() == False:
-                    with open(f'profile/{message.author.id}/duelos', 'w') as f:
-                        f.write("0")
+            if len(msgsplit) >= 2:
+                a = msgsplit[1]
+                a = a.replace("<","")
+                a = a.replace(">","")
+                user_sent = a.replace("@","")
+                if client.get_user(int(user_sent)) is not None: # find ID by right clicking on a user and choosing "copy id" at the bottom
+                    if Path(f"profile/{user_sent}").exists() == False:
+                        os.makedirs(f"profile/{user_sent}")
+                        with open(f'profile/{user_sent}/user', 'w') as f:
+                            f.write(str(user_sent))
+                        with open(f'profile/{user_sent}/coins', 'w') as f:
+                            f.write("0")
+                    else:
+                        pass
+                    if Path(f"profile/{user_sent}/duelos").exists() == False:
+                        with open(f'profile/{user_sent}/duelos', 'w') as f:
+                            f.write("0")
+                    else:
+                         pass
+                    if Path(f"profile/{user_sent}/duelos_vencidos").exists() == False:
+                        with open(f'profile/{user_sent}/duelos_vencidos', 'w') as f:
+                            f.write("0")
+                    else:
+                        pass
+                    if Path(f"profile/{user_sent}/duelos_perdidos").exists() == False:
+                        with open(f'profile/{user_sent}/duelos_perdidos', 'w') as f:
+                            f.write("0")
+                    else:
+                        pass
+                    the_user = client.get_user(int(user_sent))
+                    embed = discord.Embed(title=f"Perfil do {client.get_user(int(user_sent))}",
+                          description="*Use d$daily e d$roleta para ganhar PadolaCoins!*",
+                          colour=0x00b0f4)
+
+                    embed.add_field(name="Padola Coins",
+                                    value=f"""{open(f"profile/{user_sent}/coins", "r+").read()}""",
+                                    inline=False)
+                    embed.add_field(name="Apostas vencidas",
+                                    value=f"""{open(f"profile/{user_sent}/duelos", "r+").read()}""",
+                                    inline=False)
+                    embed.add_field(name="Duelos Mortalmente Mortais",
+                                    value=f"""Ganhou {open(f"profile/{user_sent}/duelos_vencidos", "r+").read()} - Perdeu {open(f"profile/{user_sent}/duelos_perdidos", "r+").read()}""",
+                                    inline=False)
+
+                    embed.set_thumbnail(url=the_user.display_avatar)
+
+                    embed.set_footer(text="Denji-kun Bot",
+                             icon_url=client.user.display_avatar)
+                    await message.channel.send(embed=embed)
                 else:
-                    pass
-                if Path(f"profile/{message.author.id}/duelos_vencidos").exists() == False:
-                    with open(f'profile/{message.author.id}/duelos_vencidos', 'w') as f:
-                        f.write("0")
-                else:
-                    pass
-                if my_file.exists():
-                    await message.channel.send("seu ^w^ pewfiw ^-^ foi cwiado. ^w^ Mande o comando nyovamente. *sweats*")
-                else:
-                    await message.channel.send("Seu perfil foi criado. Mande o comando novamente.")
+                    await message.channel.send(f"Tem certeza de que esse user existe?")
+
             else:
-                if Path(f"profile/{message.author.id}/duelos").exists() == False:
-                    with open(f'profile/{message.author.id}/duelos', 'w') as f:
+                if Path(f"profile/{message.author.id}").exists() == False:
+                    os.makedirs(f"profile/{message.author.id}")
+                    with open(f'profile/{message.author.id}/user', 'w') as f:
+                        f.write(str(message.author.id))
+                    with open(f'profile/{message.author.id}/coins', 'w') as f:
                         f.write("0")
+                    if Path(f"profile/{message.author.id}/duelos").exists() == False:
+                        with open(f'profile/{message.author.id}/duelos', 'w') as f:
+                            f.write("0")
+                    else:
+                        pass
+                    if Path(f"profile/{message.author.id}/duelos_vencidos").exists() == False:
+                        with open(f'profile/{message.author.id}/duelos_vencidos', 'w') as f:
+                            f.write("0")
+                    else:
+                        pass
+                    if my_file.exists():
+                        await message.channel.send("seu ^w^ pewfiw ^-^ foi cwiado. ^w^ Mande o comando nyovamente. *sweats*")
+                    else:
+                        await message.channel.send("Seu perfil foi criado. Mande o comando novamente.")
                 else:
-                    pass
-                if Path(f"profile/{message.author.id}/duelos_vencidos").exists() == False:
-                    with open(f'profile/{message.author.id}/duelos_vencidos', 'w') as f:
-                        f.write("0")
-                else:
-                    pass
-                if Path(f"profile/{message.author.id}/duelos_perdidos").exists() == False:
-                    with open(f'profile/{message.author.id}/duelos_perdidos', 'w') as f:
-                        f.write("0")
-                else:
-                    pass
-                embed = discord.Embed(title=f"Perfil do {username}",
-                      description="*Use d$daily e d$roleta para ganhar PadolaCoins!*",
-                      colour=0x00b0f4)
+                    if Path(f"profile/{message.author.id}/duelos").exists() == False:
+                        with open(f'profile/{message.author.id}/duelos', 'w') as f:
+                            f.write("0")
+                    else:
+                        pass
+                    if Path(f"profile/{message.author.id}/duelos_vencidos").exists() == False:
+                        with open(f'profile/{message.author.id}/duelos_vencidos', 'w') as f:
+                            f.write("0")
+                    else:
+                        pass
+                    if Path(f"profile/{message.author.id}/duelos_perdidos").exists() == False:
+                        with open(f'profile/{message.author.id}/duelos_perdidos', 'w') as f:
+                            f.write("0")
+                    else:
+                        pass
+                    embed = discord.Embed(title=f"Perfil do {username}",
+                          description="*Use d$daily e d$roleta para ganhar PadolaCoins!*",
+                          colour=0x00b0f4)
 
-                embed.add_field(name="Padola Coins",
-                                value=f"""{open(f"profile/{message.author.id}/coins", "r+").read()}""",
-                                inline=False)
-                embed.add_field(name="Apostas vencidas",
-                                value=f"""{open(f"profile/{message.author.id}/duelos", "r+").read()}""",
-                                inline=False)
-                embed.add_field(name="Duelos Mortalmente Mortais",
-                                value=f"""Ganhou {open(f"profile/{message.author.id}/duelos_vencidos", "r+").read()} - Perdeu {open(f"profile/{message.author.id}/duelos_perdidos", "r+").read()}""",
-                                inline=False)
+                    embed.add_field(name="Padola Coins",
+                                    value=f"""{open(f"profile/{message.author.id}/coins", "r+").read()}""",
+                                    inline=False)
+                    embed.add_field(name="Apostas vencidas",
+                                    value=f"""{open(f"profile/{message.author.id}/duelos", "r+").read()}""",
+                                    inline=False)
+                    embed.add_field(name="Duelos Mortalmente Mortais",
+                                    value=f"""Ganhou {open(f"profile/{message.author.id}/duelos_vencidos", "r+").read()} - Perdeu {open(f"profile/{message.author.id}/duelos_perdidos", "r+").read()}""",
+                                    inline=False)
 
-                embed.set_thumbnail(url=message.author.display_avatar)
+                    embed.set_thumbnail(url=message.author.display_avatar)
 
-                embed.set_footer(text="Denji-kun Bot",
-                         icon_url=client.user.display_avatar)
+                    embed.set_footer(text="Denji-kun Bot",
+                             icon_url=client.user.display_avatar)
 
                 await message.channel.send(embed=embed)
             if username not in bought_one:
