@@ -617,6 +617,33 @@ A-Ative o modo UWU
                             await message.channel.send("Ah mais que triste. Você não tem PadolaCoins o suficiente. (Dica: d$comprar)")
                         else:
                             await message.channel.send("A-Ah, m-mais que twiste!!11 você não tem PadowaCoins o suficiente. *looks at you* (Dica UWU: d$comprar)")
+                elif msgsplit[1] == "3":
+                    current_coins = open(f"profile/{message.author.id}/coins", "r+").read()
+                    if int(current_coins) >= 10000:
+                        if my_file.exists():
+                            await message.channel.send("Você compwou o benyefício 3. Wesponda a essa mensagem como você quew o comando.")
+                        else:
+                            await message.channel.send("Você comprou o benefício 3. Responda a essa mensagem como você quer o comando.")
+
+                        def sus(m):
+                            return m.author == message.author
+
+                        try:
+                            msg = await client.wait_for('message', check=sus)
+                        except asyncio.TimeoutError:
+                            await message.channel.send('Compra cancelada. Tente novamente.')
+                        else:
+                            await message.channel.send('Comando registrado.')
+                            new_coins = int(current_coins)-10000
+                            with open(f'profile/{message.author.id}/coins', 'w') as f:
+                                f.write(str(new_coins))
+                            admmasterblaster = await client.fetch_user("727194765610713138")
+                            await admmasterblaster.send(f"""Atenção Adm, o {username} comprou um comando personalizado. Ele quer desse jeito: "{msg.content}" """)
+                    else:
+                        if my_file.exists():
+                            await message.channel.send("Ah mais que triste. Você não tem PadolaCoins o suficiente. (Dica: d$comprar)")
+                        else:
+                            await message.channel.send("A-Ah, m-mais que twiste!!11 você não tem PadowaCoins o suficiente. *looks at you* (Dica UWU: d$comprar)")
 
             else:
                 if my_file.exists():
@@ -629,6 +656,9 @@ A-Ative o modo UWU
                                     inline=False)
                     embed.add_field(name="II - Rinha Coowdown Wemuvw UWU",
                                     value="Não seja afetado pewo coowdown das apostas pow 40 m-minyutos - 500 PadowaCoins",
+                                    inline=False)
+                    embed.add_field(name="III - C-Comando customizado",
+                                    value="cowoque :3 um comando customizado com seu usewnyame ;;w;; - 10000 PadowaCoins",
                                     inline=False)
 
                     embed.set_footer(text="Denji-kun Bot",
@@ -643,6 +673,9 @@ A-Ative o modo UWU
                                     inline=False)
                     embed.add_field(name="II - Rinha Cooldown Remover",
                                     value="Não seja afetado pelo cooldown das apostas por 40 minutos - 500 PadolaCoins",
+                                    inline=False)
+                    embed.add_field(name="III - Comando customizado",
+                                    value="Coloque um comando customizado com seu username - 10000 PadolaCoins",
                                     inline=False)
 
                     embed.set_footer(text="Denji-kun Bot",
