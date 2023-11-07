@@ -1158,6 +1158,27 @@ A-Ative o modo UWU
         else:
             pass
 
+    elif "d$ping" in user_message.lower() and not username in users_on_cooldown:
+        msgsplit = user_message.lower().split() 
+        if "d$ping" == msgsplit[0]:
+            if round(client.latency * 1000) <= 50:
+                embed=discord.Embed(title="Ping", description=f":ping_pong: Pingpingpingpingping! O ping é de **{round(client.latency *1000)}** millisegundos!", color=0x44ff44)
+            elif round(client.latency * 1000) <= 100:
+                embed=discord.Embed(title="Ping", description=f":ping_pong: Pingpingpingpingping! O ping é de **{round(client.latency *1000)}** millisegundos!", color=0xffd000)
+            elif round(client.latency * 1000) <= 200:
+                embed=discord.Embed(title="Ping", description=f":ping_pong: Pingpingpingpingping! O ping é de **{round(client.latency *1000)}** millisegundos!", color=0xff6600)
+            else:
+                embed=discord.Embed(title="Ping", description=f":ping_pong: Pingpingpingpingping! O ping é de **{round(client.latency *1000)}** millisegundos!", color=0x990000)
+            await message.channel.send(embed=embed)
+            if username not in bought_one:
+                users_on_cooldown.append(username)
+                await asyncio.sleep(cooldown_command) # time in seconds
+                users_on_cooldown.remove(username)
+            else:
+                pass
+        else:
+            pass
+
     elif "d$comprar" in user_message.lower() and not username in users_on_cooldown:
         msgsplit = user_message.lower().split() 
         if "d$comprar" == msgsplit[0]:
