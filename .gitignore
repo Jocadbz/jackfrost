@@ -1,2 +1,4 @@
 token
 profile/*
+bot-env/
+webhook_custom.v
