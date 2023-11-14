@@ -7,6 +7,7 @@ from discord.ext import commands
 import asyncio
 import time
 import datetime
+import logging
 
 # Arrays to include people in. For Cooldown, benefits, etc.
 # I mean, we could integrate an Database here so the benefits aren't actually lost, but no one
@@ -21,6 +22,7 @@ rinha_cooldown = []
 rinha_resposta_cooldown = []
 # In the old bot we actually used a file to verify if this was active, but in rewrite let's just use an array.
 uwu_array = []
+depression = []
 
 # Defining the cooldown.
 cooldown_command = 5
@@ -382,9 +384,13 @@ async def profile(ctx, rsuser: discord.Member = None):
     embed = discord.Embed(title=f"Perfil do {bot.get_user(int(user_sent))}",
                           description="*Use d$daily e d$roleta para ganhar PadolaCoins!*",
                           colour=0x00b0f4)
+    if Path(f"profile/{user_sent}/casado").is_file() is True:
+        user = bot.get_user(int(open(f'profile/{user_sent}/casado', 'r+').read())).display_name
+        embed.set_author(name=f"💍 Casado/a com {user}",
+                 icon_url=bot.get_user(int(open(f"profile/{user_sent}/casado", "r+").read())).display_avatar)
 
     embed.add_field(name="Padola Coins",
-                    value=f"""{open(f"profile/{user_sent}/coins", "r+").read()}""",
+                    value=f"""P£ {open(f"profile/{user_sent}/coins", "r+").read()}""",
                     inline=False)
     embed.add_field(name="Pontos de Experiência",
                     value=f"""{open(f"profile/{user_sent}/experience", "r+").read()} XP""",
@@ -852,6 +858,12 @@ Calcule os top 5 mais ricos do servidor.
 - d$uwu
 A-Ative o modo UWU
 
+- d$avatar <pessoa>
+Veja o avatar de alguém.
+
+- d$casamento <casar ou divorciar> <pessoa>
+Casamento no discord... que brega...
+
 ### Apenas para Mods ###
 
 - d$increasexp <quantidade> <pessoa>
@@ -865,9 +877,7 @@ Diminui a quantidade de XP de uma pessoa.
 
 
 # The worst command ever
-@bot.command()
-@commands.cooldown(1, cooldown_command, commands.BucketType.user)
-async def rank(ctx, arg1="coins"):
+def rank_command(arg1, multiplier):
     if arg1 == "coins":
         the_ranked_array = []
         profiles = os.listdir("profile")
@@ -877,13 +887,16 @@ async def rank(ctx, arg1="coins"):
             the_ranked_array.append({'name': f'{bot.get_user(int(profile))}', 'coins': int(coins)})
         newlist = sorted(the_ranked_array, key=lambda d: d['coins'], reverse=True)
         the_array_to_send = []
+        the_actual_array = []
+        backslash = '\n'
+        val = 5 * multiplier
         for idx, thing in enumerate(newlist):
-            the_array_to_send.append(f"{idx+1} - {thing['name'].split('#')[0]}: {thing['coins']}")
-            if idx == 4:
-                break
-        await ctx.send("Top 5 mais ricos do servidor:")
-        for thing in the_array_to_send:
-            await ctx.send(thing)
+            the_array_to_send.append(f"{idx+1} - {thing['name'].split('#')[0]}: P£ {thing['coins']}")
+        for i in range(val, val + 5):
+            the_actual_array.append(the_array_to_send[i])
+        thing = f"""Top 5 mais ricos do servidor:
+{backslash.join(the_actual_array)}
+"""
     elif arg1 == "xp":
         the_ranked_array = []
         profiles = os.listdir("profile")
@@ -893,15 +906,18 @@ async def rank(ctx, arg1="coins"):
             the_ranked_array.append({'name': f'{bot.get_user(int(profile))}', 'coins': int(coins)})
         newlist = sorted(the_ranked_array, key=lambda d: d['coins'], reverse=True)
         the_array_to_send = []
+        the_actual_array = []
+        backslash = '\n'
+        val = 5 * multiplier
         for idx, thing in enumerate(newlist):
             the_array_to_send.append(f"{idx+1} - {thing['name'].split('#')[0]}: {thing['coins']} XP")
-            if idx == 4:
-                break
-        await ctx.send("Top 5 mais experientes do servidor:")
-        for thing in the_array_to_send:
-            await ctx.send(thing)
-    else:
-        await ctx.send("Argumento não suportado. Selecione 'xp' ou 'coins'.")
+        for i in range(val, val + 5):
+            the_actual_array.append(the_array_to_send[i])
+
+        thing = f"""Top 5 mais experientes do servidor:
+{backslash.join(the_actual_array)}
+"""
+    return thing
 
 
 # Avatar
@@ -916,4 +932,140 @@ async def avatar(ctx, user: discord.Member):
 
     await ctx.send(embed=embed)
 
-bot.run(open(f"token", "r+").read())
+
+# Casamento
+# Casar no discord... é mole?
+@bot.command()
+@commands.cooldown(1, cooldown_command, commands.BucketType.user)
+async def casamento(ctx, arg1, user: discord.Member):
+    checkprofile(ctx.author.id)
+    checkprofile(user.id)
+    if arg1 == "casar":
+        if Path(f"profile/{ctx.author.id}/casado").is_file() is True:
+            if 'active' in uwu_array:
+                await ctx.send(f"Você já é casado!!11")
+            else:
+                await ctx.send(f"Você já é casado!")
+            other = bot.get_user(int(open(f"profile/{ctx.author.id}/casado", "r+").read()))
+            await other.send(f"Não é querendo ser fofoqueiro... mais o {ctx.author.display_name} tentou se casar com outra pessoa... 👀👀👀")
+        else:
+            if ctx.author in depression:
+                if 'active' in uwu_array:
+                    await ctx.send(f"Você está em depwessão?!! Espewe m-mais um tempo pawa se casaw...")
+                else:
+                    await ctx.send(f"Você está em depressão! Espere mais um tempo para se casar...")
+            if 'active' in uwu_array:
+                aposta_message = await ctx.send(f"**Atenção {user.mention}, *screeches* o {ctx.author.mention} gostawia de se c-c-casaw com você. Weaja a essa mensagem com um e-emoji de casamento (💒) pawa concowdaw com a cewimônyia.**")
+            else:
+                aposta_message = await ctx.send(f"**Atenção {user.mention}, o {ctx.author.mention} gostaria de se casar com você. Reaja a essa mensagem com um emoji de casamento (💒) para concordar com a cerimônia.**")
+            await aposta_message.add_reaction('💒')
+
+            def check(reaction, user):
+                return user == user and str(reaction.emoji) == '💒'
+
+            try:
+                reaction, user = await bot.wait_for('reaction_add', timeout=15.0, check=check)
+            except asyncio.TimeoutError:
+                if 'active' in uwu_array:
+                    await ctx.send(f"Casamento cancewado?!?1 {ctx.author.display_name} agowa entwou em depwessão...")
+                else:
+                    await ctx.send(f"Casamento cancelado! {ctx.author.display_name} agora entrou em depressão...")
+                depression.append(ctx.author)
+                await asyncio.sleep(60)
+                depression.remove(ctx.author)
+            else:
+                embed = discord.Embed(title=f"💍 {ctx.author.display_name} agora é casado com {user.display_name}! 💍",
+                                      colour=0x00b0f4)
+
+                embed.set_image(url="https://cdn.discordapp.com/attachments/1164700096668114975/1172541249077653514/image0.gif?ex=6560b122&is=654e3c22&hm=02abfda2588e3a62874ba2c16ea8e579bf5dba86b197bfc2fd36478e8ac6832f&")
+
+                await ctx.send(embed=embed)
+                with open(f'profile/{user.id}/casado', 'w') as f:
+                    f.write(str(ctx.author.id))
+                with open(f'profile/{ctx.author.id}/casado', 'w') as f:
+                    f.write(str(user.id))
+    elif arg1 == "divorciar":
+        if Path(f"profile/{ctx.author.id}/casado").is_file() is True:
+            other = bot.get_user(int(open(f"profile/{ctx.author.id}/casado", "r+").read()))
+            if user.id == other.id:
+                await other.send(f"O {ctx.author.display_name} se divorciou de você! 💔")
+                os.remove(f"profile/{ctx.author.id}/casado")
+                os.remove(f"profile/{user.id}/casado")
+                await ctx.send(f"Você se divorciou de {other.display_name}... 💔")
+            else:
+                await ctx.send("Você não é casado com essa pessoa.")
+        else:
+            await ctx.send("Você nem é casado!")
+
+
+@bot.command()
+@commands.cooldown(1, cooldown_command, commands.BucketType.user)
+async def rank(ctx, arg1="coins"):
+    if arg1 == 'coins':
+        ranked_arg = 'coins'
+        another_thing = 'ricos'
+    elif arg1 == 'xp':
+        ranked_arg = 'xp'
+        another_thing = 'experientes'
+    else:
+        await ctx.send("Argumento não reconhecido; Mudando para 'coins'")
+        another_thing = 'ricos'
+        ranked_arg = 'coins'
+
+    pages = round(len(os.listdir("profile")) / 5) - 1
+    cur_page = 1
+    embed = discord.Embed(title=f"Os mais {another_thing} do servidor:",
+                          description=rank_command(ranked_arg, cur_page - 1),
+                          colour=0x00b0f4)
+
+    embed.set_author(name=f"Página {cur_page}:")
+
+    message = await ctx.send(embed=embed)
+    # getting the message object for editing and reacting
+
+    await message.add_reaction("◀️")
+    await message.add_reaction("▶️")
+
+    def amogus(reaction, user):
+        return user == ctx.author and str(reaction.emoji) in ["◀️", "▶️"]
+        # This makes sure nobody except the command sender can interact with the "menu"
+
+    while True:
+        try:
+            reaction, user = await bot.wait_for("reaction_add", timeout=60, check=amogus)
+            # waiting for a reaction to be added - times out after x seconds, 60 in this
+            # example
+
+            if str(reaction.emoji) == "▶️" and cur_page != pages:
+                cur_page = cur_page + 1
+                command = rank_command(ranked_arg, cur_page - 1)
+                embed = discord.Embed(title=f"Os mais {another_thing} do servidor:",
+                                      description=command,
+                                      colour=0x00b0f4)
+
+                embed.set_author(name=f"Página {cur_page}:")
+                await message.edit(embed=embed)
+                await message.remove_reaction(reaction, user)
+
+            elif str(reaction.emoji) == "◀️" and cur_page > 1:
+                cur_page = cur_page - 1
+                command = rank_command(ranked_arg, cur_page - 1)
+                embed = discord.Embed(title=f"Os mais {another_thing} do servidor:",
+                                      description=command,
+                                      colour=0x00b0f4)
+
+                embed.set_author(name=f"Página {cur_page}:")
+                await message.edit(embed=embed)
+                await message.remove_reaction(reaction, user)
+
+            else:
+                await message.remove_reaction(reaction, user)
+                # removes reactions if the user tries to go forward on the last page or
+                # backwards on the first page
+        except asyncio.TimeoutError:
+            break
+            # ending the loop if user doesn't react after x seconds
+
+
+
+bot.run(open(f"token", "r+").read(), log_level=logging.INFO)
