@@ -8,6 +8,9 @@ import asyncio
 import time
 import datetime
 import logging
+import humanize
+
+humanize.activate('pt_BR')
 
 # Arrays to include people in. For Cooldown, benefits, etc.
 # I mean, we could integrate an Database here so the benefits aren't actually lost, but no one
@@ -145,7 +148,7 @@ async def sobre(ctx):
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def increasexp(ctx, amount: int, user: discord.Member):
     increase_xp(user.id, amount)
-    await ctx.send(f"Adicionou {amount} XP para {user.display_name}")
+    await ctx.send(f"Adicionou {humanize.intcomma(amount)} XP para {user.display_name}")
 
 
 # UWU COMMAND
@@ -155,7 +158,7 @@ async def increasexp(ctx, amount: int, user: discord.Member):
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def decreasexp(ctx, amount: int, user: discord.Member):
     decrease_xp(user.id, amount)
-    await ctx.send(f"Removeu {amount} XP de {user.display_name}")
+    await ctx.send(f"Removeu {humanize.intcomma(amount)} XP de {user.display_name}")
 
 
 # Battle Command
@@ -390,10 +393,10 @@ async def profile(ctx, rsuser: discord.Member = None):
                  icon_url=bot.get_user(int(open(f"profile/{user_sent}/casado", "r+").read())).display_avatar)
 
     embed.add_field(name="Padola Coins",
-                    value=f"""P£ {open(f"profile/{user_sent}/coins", "r+").read()}""",
+                    value=f"""P£ {humanize.intcomma(open(f"profile/{user_sent}/coins", "r+").read())}""",
                     inline=False)
     embed.add_field(name="Pontos de Experiência",
-                    value=f"""{open(f"profile/{user_sent}/experience", "r+").read()} XP""",
+                    value=f"""{humanize.intcomma(open(f"profile/{user_sent}/experience", "r+").read())} XP""",
                     inline=False)
     embed.add_field(name="Apostas vencidas",
                     value=f"""{open(f"profile/{user_sent}/duelos", "r+").read()}""",
@@ -488,10 +491,10 @@ async def lojinha(ctx, arg1=None):
                             value="Não seja afetado pewo coowdown das apostas e d-duelo pow 40 m-minyutos - 500 PadowaCoins",
                             inline=False)
             embed.add_field(name="II - C-Comando customizado",
-                            value="cowoque :3 um comando customizado com seu usewnyame ;;w;; - 100000 PadowaCoins",
+                            value="cowoque :3 um comando customizado com seu usewnyame ;;w;; - 100,000 PadowaCoins",
                             inline=False)
             embed.add_field(name="III - Sonyegaw impostos",
-                            value="Seja um fowa da wei e pague zewo impostos nya s-suas twansfewencias pow 40 m-minyutos - 1500 PadowaCoins",
+                            value="Seja um fowa da wei e pague zewo impostos nya s-suas twansfewencias pow 40 m-minyutos - 1,500 PadowaCoins",
                             inline=False)
 
             embed.set_footer(text="Denji-kun Bot",
@@ -505,10 +508,10 @@ async def lojinha(ctx, arg1=None):
                             value="Não seja afetado pelo cooldown das apostas e duelos por 40 minutos - 500 PadolaCoins",
                             inline=False)
             embed.add_field(name="II - Comando customizado",
-                            value="Coloque um comando customizado com seu username - 100000 PadolaCoins",
+                            value="Coloque um comando customizado com seu username - 100,000 PadolaCoins",
                             inline=False)
             embed.add_field(name="III - Sonegar impostos",
-                            value="Seja um fora da lei e pague zero impostos na suas transferencias por 40 minutos - 1500 PadolaCoins",
+                            value="Seja um fora da lei e pague zero impostos na suas transferencias por 40 minutos - 1,500 PadolaCoins",
                             inline=False)
 
             embed.set_footer(text="Denji-kun Bot",
@@ -537,9 +540,9 @@ async def investir(ctx, arg1: int):
     else:
         if resultado == "win":
             if 'active' in uwu_array:
-                await ctx.send(f"Você wucwou {str(win_thing).replace('0.', '')}%! seu ^w^ wucwo totaw :3 foi {int(int(arg1)*win_thing / 100)} PadowaCoins!")
+                await ctx.send(f"Você wucwou {humanize.intcomma(str(win_thing).replace('0.', ''))}%! seu ^w^ wucwo totaw :3 foi {int(int(arg1)*win_thing / 100)} PadowaCoins!")
             else:
-                await ctx.send(f"Você lucrou {str(win_thing).replace('0.', '')}%! Seu lucro total foi {int(int(arg1)*win_thing / 100)} PadolaCoins!")
+                await ctx.send(f"Você lucrou {humanize.intcomma(str(win_thing).replace('0.', ''))}%! Seu lucro total foi {int(int(arg1)*win_thing / 100)} PadolaCoins!")
             current_coins = open(f"profile/{ctx.author.id}/coins", "r+").read()
             new_coins = int(round(int(arg1) * win_thing / 100))
             new_coins = int(int(current_coins) + new_coins)
@@ -547,9 +550,9 @@ async def investir(ctx, arg1: int):
                 f.write(str(new_coins))
         else:
             if 'active' in uwu_array:
-                await ctx.send(f"Você pewdeu {str(win_thing).replace('0.', '')}%! Suas pewdas totais fowam *twerks* {int(round(int(arg1)*win_thing / 100))} PadowaCoins... Boa sowte nya pwóxima...")
+                await ctx.send(f"Você pewdeu {humanize.intcomma(str(win_thing).replace('0.', ''))}%! Suas pewdas totais fowam *twerks* {int(round(int(arg1)*win_thing / 100))} PadowaCoins... Boa sowte nya pwóxima...")
             else:
-                await ctx.send(f"Você perdeu {str(win_thing).replace('0.', '')}%! Suas perdas totais foram {int(round(int(arg1)*win_thing / 100))} PadolaCoins... Boa sorte na próxima...")
+                await ctx.send(f"Você perdeu {humanize.intcomma(str(win_thing).replace('0.', ''))}%! Suas perdas totais foram {int(round(int(arg1)*win_thing / 100))} PadolaCoins... Boa sorte na próxima...")
             current_coins = open(f"profile/{ctx.author.id}/coins", "r+").read()
             new_coins = int(round(int(arg1) * win_thing / 100))
             new_coins = int(int(current_coins) - new_coins)
@@ -620,16 +623,16 @@ async def doar(ctx, amount: int, user: discord.Member):
                 f.write(str(int(joca_coins)))
             if ctx.author not in bought_four:
                 if "active" in uwu_array:
-                    await ctx.send(f"Você twansfewiu *looks at you* {amount} :3 Padowa *walks away* coins pawa {user.mention}! (imposto cobwado: {str(int(imposto))} PadowaCoins)")
+                    await ctx.send(f"Você twansfewiu *looks at you* {humanize.intcomma(amount)} :3 Padowa *walks away* coins pawa {user.mention}! (imposto cobwado: {str(int(imposto))} PadowaCoins)")
                     await ctx.send(f"compwe >w< o benyefício 4 nya d$wojinha pawa não pagaw ^w^ impostos?!!")
                 else:
-                    await ctx.send(f"Você transferiu {amount} Padola coins para {user.mention}! (Imposto cobrado: {str(int(imposto))} PadolaCoins)")
+                    await ctx.send(f"Você transferiu {humanize.intcomma(amount)} Padola coins para {user.mention}! (Imposto cobrado: {str(int(imposto))} PadolaCoins)")
                     await ctx.send(f"Compre o benefício 4 na d$lojinha para não pagar impostos!")
             else:
                 if "active" in uwu_array:
-                    await ctx.send(f"Você twansfewiu *looks at you* {amount} :3 Padowa *walks away* coins pawa {user.mention}! (Sem impostos cobwados *notices buldge*)")
+                    await ctx.send(f"Você twansfewiu *looks at you* {humanize.intcomma(amount)} :3 Padowa *walks away* coins pawa {user.mention}! (Sem impostos cobwados *notices buldge*)")
                 else:
-                    await ctx.send(f"Você transferiu {amount} Padola coins para {user.mention}! (Sem impostos cobrados)")
+                    await ctx.send(f"Você transferiu {humanize.intcomma(amount)} Padola coins para {user.mention}! (Sem impostos cobrados)")
 
 
 @bot.command()
@@ -662,9 +665,9 @@ async def rinha(ctx, amount: int, user: discord.Member):
                         await ctx.send("Me parece que seu oponente não pode cobrir essa aposta... (Dica: d$comprar)")
                 else:
                     if 'active' in uwu_array:
-                        aposta_message = await ctx.send(f"**Atenção {user.mention}, *screeches* o {ctx.author.mention} quew apostaw {amount} :3 PadowaCoins com você. Weaja a esta mensagem com um e-emoji de d-dedão '👍' em 15 segundos pawa concowdaw com a aposta.**")
+                        aposta_message = await ctx.send(f"**Atenção {user.mention}, *screeches* o {ctx.author.mention} quew apostaw {humanize.intcomma(amount)} :3 PadowaCoins com você. Weaja a esta mensagem com um e-emoji de d-dedão '👍' em 15 segundos pawa concowdaw com a aposta.**")
                     else:
-                        aposta_message = await ctx.send(f"**Atenção {user.mention}, o {ctx.author.mention} quer apostar {amount} PadolaCoins com você. Reaja a esta mensagem com um emoji de dedão '👍' em 15 segundos para concordar com a aposta.**")
+                        aposta_message = await ctx.send(f"**Atenção {user.mention}, o {ctx.author.mention} quer apostar {humanize.intcomma(amount)} PadolaCoins com você. Reaja a esta mensagem com um emoji de dedão '👍' em 15 segundos para concordar com a aposta.**")
                     await aposta_message.add_reaction('👍')
 
                     def check(reaction, user):
@@ -688,9 +691,9 @@ async def rinha(ctx, amount: int, user: discord.Member):
                         # The code has a absolutely stroke, so I don't reccoment changing anything here.
                         if resultado == 'win':
                             if 'active' in uwu_array:
-                                await ctx.send(f"{ctx.author.mention}!!11 Pawabéns, você ganhou {amount} :3 PadowaCoins?!?1")
+                                await ctx.send(f"{ctx.author.mention}!!11 Pawabéns, você ganhou {humanize.intcomma(amount)} :3 PadowaCoins?!?1")
                             else:
-                                await ctx.send(f"{ctx.author.mention}! Parabéns, você ganhou {amount} PadolaCoins!")
+                                await ctx.send(f"{ctx.author.mention}! Parabéns, você ganhou {humanize.intcomma(amount)} PadolaCoins!")
                             current_coins = open(f"profile/{ctx.author.id}/coins", "r+").read()
                             new_coins = int(current_coins) + amount
                             current_coins_user = open(f"profile/{user.id}/coins", "r+").read()
@@ -706,9 +709,9 @@ async def rinha(ctx, amount: int, user: discord.Member):
 
                         else:
                             if 'active' in uwu_array:
-                                await ctx.send(f"{user.mention}!!11 Pawabéns, você ganhou {amount} :3 PadowaCoins?!?1")
+                                await ctx.send(f"{user.mention}!!11 Pawabéns, você ganhou {humanize.intcomma(amount)} :3 PadowaCoins?!?1")
                             else:
-                                await ctx.send(f"{user.mention}! Parabéns, você ganhou {user.mention} PadolaCoins!")
+                                await ctx.send(f"{user.mention}! Parabéns, você ganhou {humanize.intcomma(amount)} PadolaCoins!")
                             current_coins = open(f"profile/{ctx.author.id}/coins", "r+").read()
                             new_coins = int(current_coins) - amount
                             current_coins_user = open(f"profile/{user.id}/coins", "r+").read()
@@ -891,10 +894,10 @@ def rank_command(arg1, multiplier):
         backslash = '\n'
         val = 5 * multiplier
         for idx, thing in enumerate(newlist):
-            the_array_to_send.append(f"{idx+1} - {thing['name'].split('#')[0]}: P£ {thing['coins']}")
+            the_array_to_send.append(f"{idx+1} - {thing['name'].split('#')[0]}: P£ {humanize.intcomma(thing['coins'])}")
         for i in range(val, val + 5):
             the_actual_array.append(the_array_to_send[i])
-        thing = f"""Top 5 mais ricos do servidor:
+        thing = f"""
 {backslash.join(the_actual_array)}
 """
     elif arg1 == "xp":
@@ -910,11 +913,11 @@ def rank_command(arg1, multiplier):
         backslash = '\n'
         val = 5 * multiplier
         for idx, thing in enumerate(newlist):
-            the_array_to_send.append(f"{idx+1} - {thing['name'].split('#')[0]}: {thing['coins']} XP")
+            the_array_to_send.append(f"{idx+1} - {thing['name'].split('#')[0]}: {humanize.intcomma(thing['coins'])} XP")
         for i in range(val, val + 5):
             the_actual_array.append(the_array_to_send[i])
 
-        thing = f"""Top 5 mais experientes do servidor:
+        thing = f"""
 {backslash.join(the_actual_array)}
 """
     return thing
