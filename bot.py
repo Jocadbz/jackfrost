@@ -4,38 +4,56 @@ import os.path
 import random
 from pathlib import Path
 from discord.ext import commands
+from discord import app_commands
 import asyncio
 import time
 import datetime
 import logging
 import humanize
+import shutil
+from dateutil.relativedelta import relativedelta
+import dateutil.parser
+import enum
+from typing import Literal
+import toml
+from waifuim import WaifuAioClient
+import traceback
 
 humanize.activate('pt_BR')
+
 
 # Arrays to include people in. For Cooldown, benefits, etc.
 # I mean, we could integrate an Database here so the benefits aren't actually lost, but no one
 # really cares about it.
 users_on_cooldown = []
 daily_cooldown = []
+bought_two_premium = []
 bought_two = []
 bought_four = []
 roleta_cooldown = []
 investir_cooldown = []
 rinha_cooldown = []
 rinha_resposta_cooldown = []
-# In the old bot we actually used a file to verify if this was active, but in rewrite let's just use an array.
+chatgptcooldown = []
 uwu_array = []
 depression = []
 
 # Defining the cooldown.
 cooldown_command = 5
 
-# Now This is the bot's code.
-# First, define perms, prefix and the rest of useless shit.
-intents = discord.Intents.all()
-intents.message_content = True
-prefixes = "d$", "D$"
-bot = commands.Bot(command_prefix=prefixes, intents=intents)
+# BANNED USERS
+banned_users = []
+
+# Useful Functions
+
+# About Command
+# We Also define the uptime function here since that is really the only place we use it.
+# We also register the Boot Time for future use.
+BOOT_TIME = time.time()
+
+
+def uptime():
+    return str(datetime.timedelta(seconds=int(time.time() - BOOT_TIME)))
 
 
 # Define the XP functions we need.
@@ -78,60 +96,281 @@ def checkprofile(user_sent):
             f.write("0")
 
 
+# Set up command tree Sync
+class MyClient(discord.Client):
+    def __init__(self, *, intents: discord.Intents):
+        super().__init__(intents=intents)
+        self.tree = app_commands.CommandTree(self)
+
+    async def setup_hook(self):
+        await self.tree.sync()
+
+
+# The worst command ever
+def rank_command(arg1, multiplier):
+    if arg1 == "coins":
+        the_ranked_array = []
+        profiles = os.listdir("profile")
+        profiles.remove("727194765610713138")
+        for profile in profiles:
+            if bot.get_user(int(profile)) is None:
+                pass
+            else:
+                checkprofile(profile)
+                coins = open(f"profile/{profile}/coins", "r+").read()
+                the_ranked_array.append({'name': f'{bot.get_user(int(profile))}', 'coins': int(coins)})
+        newlist = sorted(the_ranked_array, key=lambda d: d['coins'], reverse=True)
+        the_array_to_send = []
+        the_actual_array = []
+        backslash = '\n'
+        val = 5 * multiplier
+        for idx, thing in enumerate(newlist):
+            the_array_to_send.append(f"{idx+1} - {thing['name'].split('#')[0]}: P£ {humanize.intcomma(thing['coins'])}")
+        for i in range(val, val + 5):
+            the_actual_array.append(the_array_to_send[i])
+        thing = f"""
+{backslash.join(the_actual_array)}
+"""
+    elif arg1 == "xp":
+        the_ranked_array = []
+        profiles = os.listdir("profile")
+        for profile in profiles:
+            if bot.get_user(int(profile)) is None:
+                pass
+            else:
+                checkprofile(profile)
+                coins = open(f"profile/{profile}/experience", "r+").read()
+                the_ranked_array.append({'name': f'{bot.get_user(int(profile))}', 'coins': int(coins)})
+        newlist = sorted(the_ranked_array, key=lambda d: d['coins'], reverse=True)
+        the_array_to_send = []
+        the_actual_array = []
+        backslash = '\n'
+        val = 5 * multiplier
+        for idx, thing in enumerate(newlist):
+            the_array_to_send.append(f"{idx+1} - {thing['name'].split('#')[0]}: {humanize.intcomma(thing['coins'])} XP")
+        for i in range(val, val + 5):
+            the_actual_array.append(the_array_to_send[i])
+
+        thing = f"""
+{backslash.join(the_actual_array)}
+"""
+    return thing
+
+
+def create_commands_folder():
+    if Path(f"custom_commands").exists() is False:
+        os.makedirs("custom_commands")
+
+
+# Now This is the bot's code.
+# First, define perms, prefix and the rest of useless shit.
+intents = discord.Intents.all()
+intents.message_content = True
+prefixes = "d$", "D$"
+client = MyClient(intents=intents)
+bot = commands.Bot(command_prefix=prefixes, intents=intents)
+
+
 # Initiate Bot's log, and define on_message functions.
 @bot.event
 async def on_ready():
     print(f'Logged on as {bot.user}!')
+    await bot.change_presence(activity=discord.CustomActivity(name='Tentando pegar em uns peitos | d$help', emoji='👀'))
 
 
+# Set up on message stuff
 @bot.event
 async def on_message(message):
-    # Just define the cooldown variable so we can know who bought the first benefit.
     if message.author == bot.user:
         return
     elif message.author.bot is True:
         return
+    elif "d$" in message.content.lower():
+        with open('config_channels.toml', 'r') as f:
+            config = toml.load(f)
+        if message.channel.id in config["channels"]:
+            await message.channel.send(f"O Administrador desabilitou comandos no canal {message.channel.name}", reference=message)
+        else:
+            create_commands_folder()
+            commands = os.listdir("custom_commands")
+            command = message.content.lower().replace("d$", "")
+            if message.content.lower().replace("d$", "") in commands:
+                await message.channel.send(open(f"custom_commands/{command.lower()}", "r+").read())
+            else:
+                await bot.process_commands(message)
     elif "calcinha" in message.content.lower():
         if "active" in uwu_array:
             jokes = "Quewia tanto OwO tew uma..."
         else:
             jokes = "Queria tanto ter uma..."
         await message.channel.send(jokes)
-    if "peitos" in message.content.lower():
+    elif "peitos" in message.content.lower():
         if "active" in uwu_array:
-            jokes = ["PEITOS?!?! aONDE?!?1 *sweats* PEITOS PEITOS PEITOS PEITOS AAAAAAAAAAAAAA", "São >w< tão macios... quewia pegaw em uns peitos...", "EU QUEWO PEITOOOOOOOOOOS", "Sou o maiow fã de peitos do mundo"]
+            jokes = ["PEITOS?!?! aONDE?!?1 *sweats* PEITOS PEITOS PEITOS PEITOS AAAAAAAAAAAAAA", "São >w< tão macios... quewia pegaw em uns peitos...", "EU QUEWO PEITOOOOOOOOOOS", "Sou o maiow fã de peitos do mundo", "E-Eu nwao ligo maisw pwo mundo, só UWU q-qewo peitos"]
         else:
-            jokes = ["PEITOS???? AONDE?????? PEITOS PEITOS PEITOS PEITOS AAAAAAAAAAAAAA", "São tão macios... queria pegar em uns peitos...", "EU QUERO PEITOOOOOOOOOOS", "Sou o maior fã de peitos do mundo"]
+            jokes = ["PEITOS???? AONDE?????? PEITOS PEITOS PEITOS PEITOS AAAAAAAAAAAAAA", "São tão macios... queria pegar em uns peitos...", "EU QUERO PEITOOOOOOOOOOS", "Sou o maior fã de peitos do mundo", "Eu não ligo mais pro mundo, só quero peitos"]
         await message.channel.send(random.choice(jokes))
-    increase_xp(message.author.id, 2)
-    await bot.process_commands(message)
+    else:
+        if len(message.content) < 5:
+            msg_xp = 0
+        else:
+            msg_xp = 2
+        increase_xp(message.author.id, msg_xp)
+        profiles = os.listdir("profile")
+        for profile in profiles:
+            if Path(f"profile/{profile}/premium").exists() is False:
+                pass
+            else:
+                if bot.get_user(int(profile)) not in bought_two:
+                    bought_two.append(bot.get_user(int(profile)))
+                if bot.get_user(int(profile)) not in bought_four:
+                    bought_four.append(bot.get_user(int(profile)))
+                newdate1 = dateutil.parser.parse(open(f"profile/{profile}/premium/date", 'r+'))
+                if newdate1 + relativedelta(days=7) <= datetime.datetime.now():
+                    shutil.rmtree(f"profile/{profile}/premium")
+                    await bot.get_user(int(profile)).send("Opa, só passando pra avisar que seu premium expirou. Compre mais pra continuar aproveitando os benefícios!")
+                    bought_two.remove(bot.get_user(int(profile)))
+                    bought_four.remove(bot.get_user(int(profile)))
+
+        await bot.process_commands(message)
 
 
 # Global error catching
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, discord.ext.commands.errors.CommandNotFound):
-        await ctx.send("Esse comando não existe. Desculpe!")
+        await ctx.reply("Esse comando não existe. Desculpe!")
     elif isinstance(error, discord.ext.commands.errors.MissingRequiredArgument):
-        await ctx.send("Me parece que o comando que você está tentando usar requer um ou mais argumentos.")
+        await ctx.reply("Me parece que o comando que você está tentando usar requer um ou mais argumentos.")
     elif isinstance(error, discord.ext.commands.errors.MissingPermissions):
-        await ctx.send("Você não é ADM... Boa tentativa.")
+        await ctx.reply("Você não é ADM... Boa tentativa.")
+    elif isinstance(error, discord.ext.commands.CommandError):
+        await ctx.reply("Oops! Infelizmente aconteceu um erro no comando :(")
 
 
-# About Command
-# We Also define the uptime function here since that is really the only place we use it.
-# We also register the Boot Time for future use.
-BOOT_TIME = time.time()
+@bot.event
+async def on_error(event, *args, **kwargs):
+    embed = discord.Embed(title=':x: Event Error', colour=0xe74c3c)
+    embed.add_field(name='Event', value=event)
+    embed.description = '```py\n%s\n```' % traceback.format_exc()
+    embed.timestamp = datetime.datetime.utcnow()
+    await bot.get_user(727194765610713138).send(embed=embed)
 
 
-def uptime():
-    return str(datetime.timedelta(seconds=int(time.time() - BOOT_TIME)))
-
+####################################################################################
+# COMANDOS DE ADMINISTRADOR
+####################################################################################
 
 @bot.command()
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
+async def sync(ctx):
+    if ctx.author.id == 727194765610713138:
+        await ctx.bot.tree.sync()
+        print(f'Commands Synced!')
+        await ctx.reply("Comandos sincronizados")
+    else:
+        await ctx.send("Ei, você não é o Joca, SAI FORA!")
+
+
+@bot.hybrid_command(name="increasexp", description="Aumenta um XP de um usuário")
+@app_commands.describe(quantidade="Quantidade de XP", usuário="Usuário escolhido")
+@commands.has_permissions(administrator=True)
+@commands.cooldown(1, cooldown_command, commands.BucketType.user)
+async def increasexp(ctx, quantidade: int, usuário: discord.Member) -> None:
+    increase_xp(usuário.id, quantidade)
+    await ctx.send(f"Adicionou {humanize.intcomma(quantidade)} XP para {usuário.display_name}")
+
+
+# UWU COMMAND
+# Enables the UwU mode Nya!
+@bot.hybrid_command(name="decreasexp", description="Diminui o XP de um usuário")
+@app_commands.describe(quantidade="Quantidade de XP", usuário="Usuário escolhido")
+@commands.has_permissions(administrator=True)
+@commands.cooldown(1, cooldown_command, commands.BucketType.user)
+async def decreasexp(ctx, quantidade: int, usuário: discord.Member):
+    decrease_xp(usuário.id, quantidade)
+    await ctx.send(f"Removeu {humanize.intcomma(quantidade)} XP de {usuário.display_name}")
+
+
+@bot.hybrid_command(name="habilitarnsfw", description="DEIXE A FANHETA LIVRE")
+@commands.has_permissions(administrator=True)
+@commands.cooldown(1, cooldown_command, commands.BucketType.user)
+async def habilitarnsfw(ctx) -> None:
+    with open('config_nsfw.toml', 'r') as f:
+        config = toml.load(f)
+
+    if ctx.channel.id not in config["channels"]:
+        config["channels"].append(ctx.channel.id)
+    else:
+        pass
+
+    with open('config_nsfw.toml', 'w') as f:
+        toml.dump(config, f)
+
+    await ctx.reply(f"Comando NSFW ativado no canal {ctx.channel} (Use d$desabilitarnsfw para desabilitar.)")
+
+
+@bot.hybrid_command(name="desabilitarnsfw", description="Sem fanheta :(")
+@commands.has_permissions(administrator=True)
+@commands.cooldown(1, cooldown_command, commands.BucketType.user)
+async def desabilitarnsfw(ctx) -> None:
+    with open('config_nsfw.toml', 'r') as f:
+        config = toml.load(f)
+
+    if ctx.channel.id in config["channels"]:
+        config["channels"].remove(ctx.channel.id)
+    else:
+        pass
+
+    with open('config_nsfw.toml', 'w') as f:
+        toml.dump(config, f)
+
+    await ctx.reply(f"Comando NSFW desativado no canal {ctx.channel} (Use d$habilitarnsfw para habilitar.)")
+
+
+@bot.hybrid_command(name="habilitarcomandos", description="Habilitar comandos em um canal específico")
+@commands.has_permissions(administrator=True)
+@commands.cooldown(1, cooldown_command, commands.BucketType.user)
+async def habilitarcomandos(ctx) -> None:
+    with open('config_channels.toml', 'r') as f:
+        config = toml.load(f)
+
+    if ctx.channel.id in config["channels"]:
+        config["channels"].remove(ctx.channel.id)
+    else:
+        pass
+
+    with open('config_channels.toml', 'w') as f:
+        toml.dump(config, f)
+
+    await ctx.reply(f"Comandos habilitados no canal {ctx.channel} (Use d$desabilitarcomandos para desabilitar.)")
+
+
+@bot.hybrid_command(name="desabilitarcomandos", description="Desabilitar comandos em um canal específico")
+@commands.has_permissions(administrator=True)
+@commands.cooldown(1, cooldown_command, commands.BucketType.user)
+async def desabilitarcomandos(ctx) -> None:
+    with open('config_channels.toml', 'r') as f:
+        config = toml.load(f)
+
+    if ctx.channel.id not in config["channels"]:
+        config["channels"].append(ctx.channel.id)
+    else:
+        pass
+
+    with open('config_channels.toml', 'w') as f:
+        toml.dump(config, f)
+
+    await ctx.reply(f"Comandos desativados no canal {ctx.channel} (Use d$habilitarcomandos para habilitar.)")
+
+####################################################################################
+# PREFIX COMMANDS
+####################################################################################
+
+
+@bot.hybrid_command(name="sobre", description="Dá uma descrição do bot")
+@commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def sobre(ctx):
-    print(cooldown_command)
     the_user = bot.get_user(int("727194765610713138"))
     embed = discord.Embed(title='DenjiBot', colour=0x00b0f4)
     embed.set_thumbnail(url=bot.user.display_avatar)
@@ -141,31 +380,23 @@ async def sobre(ctx):
     await ctx.send(embed=embed)
 
 
-# UWU COMMAND
-# Enables the UwU mode Nya!
-@bot.command()
-@commands.has_permissions(administrator=True)
+@bot.hybrid_command(name="uwu", description="Ative o modo UWU")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
-async def increasexp(ctx, amount: int, user: discord.Member):
-    increase_xp(user.id, amount)
-    await ctx.send(f"Adicionou {humanize.intcomma(amount)} XP para {user.display_name}")
-
-
-# UWU COMMAND
-# Enables the UwU mode Nya!
-@bot.command()
-@commands.has_permissions(administrator=True)
-@commands.cooldown(1, cooldown_command, commands.BucketType.user)
-async def decreasexp(ctx, amount: int, user: discord.Member):
-    decrease_xp(user.id, amount)
-    await ctx.send(f"Removeu {humanize.intcomma(amount)} XP de {user.display_name}")
+async def uwu(ctx):
+    if 'active' in uwu_array:
+        uwu_array.remove("active")
+        await ctx.reply("Modo UWU desativado!")
+    else:
+        uwu_array.append("active")
+        await ctx.reply("Modo UWU Ativado!")
 
 
 # Battle Command
 # Simmulates an idiotic battle between two concepts.
-@bot.command()
+@bot.hybrid_command(name="battle", description="Simula uma batalha")
+@app_commands.describe(arg1="Pessoa um", arg2="Pessoa Dois")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
-async def battle(ctx, arg1, arg2):
+async def battle(ctx, arg1: str, arg2: str) -> None:
     rand1 = [0, 1]
     if "active" in uwu_array:
         if random.choice(rand1) == 0:
@@ -193,7 +424,7 @@ async def battle(ctx, arg1, arg2):
 
 # Gerador de cancelamento
 # Roubado de um certo site
-@bot.command()
+@bot.hybrid_command(name="cancelamento", description="Simula um cancelamento")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def cancelamento(ctx):
     if "active" in uwu_array:
@@ -206,7 +437,7 @@ async def cancelamento(ctx):
 
 # SÁBIO
 # Obtenha respostas para as questões mais importantes da vida.
-@bot.command()
+@bot.hybrid_command(name="sabio", description="Obtenha as respostas para todas as questões da vida")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def sabio(ctx):
     if "active" in uwu_array:
@@ -218,9 +449,10 @@ async def sabio(ctx):
 
 # PPT
 # Declaração de amor via Discord... que brega.
-@bot.command()
+@bot.hybrid_command(name="ppt", description="Declare seu amor!")
+@app_commands.describe(lover="Seu amado")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
-async def ppt(ctx, lover):
+async def ppt(ctx, lover: discord.Member) -> None:
     if 'active' in uwu_array:
         jokes = f"Cawo/Cawa {lover}, o {ctx.author.mention} gostawia de d-decwawaw seus sentimentos a você."
     else:
@@ -230,9 +462,10 @@ async def ppt(ctx, lover):
 
 # Jogo
 # Simulação do jogo de futebol do seu time. Que você sabe que vai perder.
-@bot.command()
+@bot.hybrid_command(name="jogo", description="Deixe o bot decidir o resultado do jogo do seu time de coração")
+@app_commands.describe(time1="Time Um", time2="Time dois")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
-async def jogo(ctx, time1, time2):
+async def jogo(ctx, time1: str, time2: str) -> None:
     rand1 = [0, 1, 2, 3, 4, 5]
     if "active" in uwu_array:
         jokes = f"O wesuwtado da pawtida de {time1} x {time2} vai sew {random.choice(rand1)} x {random.choice(rand1)} UWU"
@@ -243,7 +476,7 @@ async def jogo(ctx, time1, time2):
 
 # Comprar
 # Cobrando por PadolaCoins KKKKKKKKKKKKKKK.
-@bot.command()
+@bot.hybrid_command(name="comprar", description="Informações sobre a compra de PadolaCoins")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def comprar(ctx):
     thing = """Ficou sem dinheiro apostando com o ADM? Agora você pode realizar a compra de PadolaCoins!
@@ -254,9 +487,26 @@ Para comprar, chame o criador do DenjiBot (@jocadbz) na DM. O valor é negociáv
     await ctx.send("https://tenor.com/view/mlem-silly-goofy-cat-silly-cat-goofy-gif-27564930")
 
 
+# Comprar
+# Cobrando por PadolaCoins KKKKKKKKKKKKKKK.
+@bot.hybrid_command(name="premium", description="Informações sobre a compra do Premium")
+@commands.cooldown(1, cooldown_command, commands.BucketType.user)
+async def premium(ctx):
+    thing = """Agora ficou ainda mais fácil de ganhar beneficíos no Denji. O Premium é um jeito barato, rápido, e fácil de ostentar para os pobres.
+Os benefícios incluem:
+- 100K De PadolaCoins
+- O DOBRO de dinheiro no d$daily
+- Todos os benefícios da lojinha permanentemente
+- Perfil diferenciado
+
+O preço estabelecido é de R$2/Semana (50% OFF!!). Para realizar a compra, chame @jocadbz na DM."""
+    await ctx.send(thing)
+    await ctx.send("https://cdn.discordapp.com/attachments/1164700096668114975/1175195963636322334/image0.gif?ex=656a5987&is=6557e487&hm=1e638b6daaa7c3f5661b8356b67eadae6231b7220b6cb25ecd5c0612e98dd514&")
+
+
 # Ping
 # Não estamos nos referindo ao esporte.
-@bot.command()
+@bot.hybrid_command(name="ping", description="Teste a latência do bot")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def ping(ctx):
     if round(bot.latency * 1000) <= 50:
@@ -270,79 +520,9 @@ async def ping(ctx):
     await ctx.send(embed=embed)
 
 
-# Comandos Customizados pedidos por pessoas
-
-
-@bot.command()
-@commands.cooldown(1, cooldown_command, commands.BucketType.user)
-async def fanho(ctx):
-    await ctx.send("https://tenor.com/view/makima-bean-beans-chainsaw-man-gif-25992235")
-
-
-@bot.command()
-@commands.cooldown(1, cooldown_command, commands.BucketType.user)
-async def fanho2(ctx):
-    await ctx.send("https://cdn.discordapp.com/attachments/1164692508668862515/1171207341488750714/image0.gif?ex=655bd6d6&is=654961d6&hm=e139f0b8fefedde2b29d3a57212c3111a23db7cfe529ae4e931aac42d11349bb&")
-
-
-@bot.command()
-@commands.cooldown(1, cooldown_command, commands.BucketType.user)
-async def reze69(ctx):
-    await ctx.send("https://tenor.com/view/rolando-ronaldo-cristiano-gif-26255427")
-
-
-@bot.command()
-@commands.cooldown(1, cooldown_command, commands.BucketType.user)
-async def suro(ctx):
-    await ctx.send("https://media.discordapp.net/attachments/804443142879182871/941984752603398154/image0-156.gif")
-
-
-@bot.command()
-@commands.cooldown(1, cooldown_command, commands.BucketType.user)
-async def dani(ctx):
-    await ctx.send("https://tenor.com/view/gojo-gojo-satoru-dancing-jjk-jujutsu-kaisen-gif-25819377")
-
-
-@bot.command()
-@commands.cooldown(1, cooldown_command, commands.BucketType.user)
-async def dani2(ctx):
-    await ctx.send("https://tenor.com/view/choso-choso-jjk-choso-jujutsu-kaisen-choso-anime-jujutsu-kaisen-gif-10037971888755283102")
-
-
-@bot.command()
-@commands.cooldown(1, cooldown_command, commands.BucketType.user)
-async def kaishl(ctx):
-    await ctx.send("https://tenor.com/view/bom-dia-valtatui-valtatui-bom-dia-gif-25587386")
-
-
-@bot.command()
-@commands.cooldown(1, cooldown_command, commands.BucketType.user)
-async def skyte(ctx):
-    await ctx.send("https://tenor.com/view/ronaldo-win-ronaldo-award-ronaldo-gif-24123234")
-
-
-@bot.command()
-@commands.cooldown(1, cooldown_command, commands.BucketType.user)
-async def lana(ctx):
-    await ctx.send("https://tenor.com/view/himeno-himmy-himeno-chainsaw-man-banging-headbanging-gif-6931555360158583987")
-
-
-@bot.command()
-@commands.cooldown(1, cooldown_command, commands.BucketType.user)
-async def padola(ctx):
-    gifs = ["https://tenor.com/view/saber-burger-gif-23551262", "https://tenor.com/view/majima-smoke-majima-majima-walking-gif-27442361"]
-    await ctx.send(random.choice(gifs))
-
-
-@bot.command()
-@commands.cooldown(1, cooldown_command, commands.BucketType.user)
-async def joca(ctx):
-    await ctx.send("https://cdn.discordapp.com/attachments/1164700096668114975/1172164504726028379/image0.gif?ex=655f5243&is=654cdd43&hm=8338bbfcd2ad9857b34d320d456d9ad2e521ab109ceb2db19a2a60e543a4fe27&")
-
-
 # DAILY
 # Win 100 PadolaCoins every 40 minutes.
-@bot.command()
+@bot.hybrid_command(name="daily", description="Ganhe PadolaCoins diários")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def daily(ctx):
     checkprofile(ctx.author.id)
@@ -355,13 +535,20 @@ async def daily(ctx):
 
     else:
         current_coins = open(f"profile/{ctx.author.id}/coins", "r+").read()
-        new_coins = int(current_coins) + 100
+        if Path(f"profile/{ctx.author.id}/premium").exists() is True:
+            new_coins = int(current_coins) + 2200
+            if 'active' in uwu_array:
+                await ctx.send(f"Você ganhou 2200 PadowaCoins?!?1 (Bônyus de Pwemium)")
+            else:
+                await ctx.send(f"Você ganhou 2200 PadolaCoins! (Bônus de Premium)")
+        else:
+            new_coins = int(current_coins) + 1100
+            if 'active' in uwu_array:
+                await ctx.send(f"Você ganhou 1100 PadowaCoins?!?1")
+            else:
+                await ctx.send(f"Você ganhou 1100 PadolaCoins!")
         with open(f'profile/{ctx.author.id}/coins', 'w') as f:
             f.write(str(new_coins))
-        if 'active' in uwu_array:
-            await ctx.send(f"Você ganhou 100 PadowaCoins?!?1")
-        else:
-            await ctx.send(f"Você ganhou 100 PadolaCoins!")
         daily_cooldown.append(ctx.author)
         await asyncio.sleep(2500)
         daily_cooldown.remove(ctx.author)
@@ -369,28 +556,43 @@ async def daily(ctx):
 
 # Profile
 # Check User Profile
-@bot.command()
+@bot.hybrid_command(name="profile", description="Verifique o seu perfil e o de outros usuários")
+@app_commands.describe(rsuser="O Usuário para verificar o perfil")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 # TODO: Try to find a way of reducing code in this specific command.
-async def profile(ctx, rsuser: discord.Member = None):
+async def profile(ctx, rsuser: discord.Member | None = None):
+    rsuser = rsuser or None
     if rsuser is not None:
         # TODO: Fix the fact that this gets ignored if we throw any letters at it.
         user_sent = rsuser.id
+        if rsuser.nick is not None:
+            nick = rsuser.nick
+        else:
+            nick = rsuser.name
         if bot.get_user(int(user_sent)) is None:
             await ctx.send(f"Tem certeza de que esse user existe?")
             return
     else:
         user_sent = ctx.author.id
+        if ctx.author.nick is not None:
+            nick = ctx.author.nick
+        else:
+            nick = ctx.author.name
 
     checkprofile(user_sent)
 
-    embed = discord.Embed(title=f"Perfil do {bot.get_user(int(user_sent))}",
-                          description="*Use d$daily e d$roleta para ganhar PadolaCoins!*",
-                          colour=0x00b0f4)
+    if Path(f"profile/{user_sent}/premium").exists() is True:
+        embed = discord.Embed(title=f"Perfil do/a {nick} (👑 Premium)",
+                              description="*Use d$daily e d$roleta para ganhar PadolaCoins!*",
+                              colour=0xf5c211)
+    else:
+        embed = discord.Embed(title=f"Perfil do/a {nick}",
+                              description="*Use d$daily e d$roleta para ganhar PadolaCoins!*",
+                              colour=0x00b0f4)
     if Path(f"profile/{user_sent}/casado").is_file() is True:
         user = bot.get_user(int(open(f'profile/{user_sent}/casado', 'r+').read())).display_name
         embed.set_author(name=f"💍 Casado/a com {user}",
-                 icon_url=bot.get_user(int(open(f"profile/{user_sent}/casado", "r+").read())).display_avatar)
+                         icon_url=bot.get_user(int(open(f"profile/{user_sent}/casado", "r+").read())).display_avatar)
 
     embed.add_field(name="Padola Coins",
                     value=f"""P£ {humanize.intcomma(open(f"profile/{user_sent}/coins", "r+").read())}""",
@@ -409,13 +611,22 @@ async def profile(ctx, rsuser: discord.Member = None):
 
     embed.set_footer(text="Denji-kun Bot",
                      icon_url=bot.user.display_avatar)
-    await ctx.send(embed=embed)
+    await ctx.reply(embed=embed)
+
+
+# Escolhas da Lojinha
+class Item(str, enum.Enum):
+    Item_1 = "1"
+    Item_2 = "2"
+    Item_3 = "3"
 
 
 # Lojinha
-@bot.command()
+@bot.hybrid_command(name="lojinha", description="Verifique os itens da lojinha")
+@app_commands.describe(arg1="O Item para comprar")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
-async def lojinha(ctx, arg1=None):
+async def lojinha(ctx, arg1: Item | None = None):
+    arg1 = arg1 or None
     checkprofile(ctx.author.id)
     if arg1 == "1":
         current_coins = open(f"profile/{ctx.author.id}/coins", "r+").read()
@@ -437,26 +648,47 @@ async def lojinha(ctx, arg1=None):
                 await ctx.send("A-Ah, m-mais que twiste!!11 você não tem PadowaCoins o suficiente. *looks at you* (Dica UWU: d$comprar)")
     elif arg1 == "2":
         current_coins = open(f"profile/{ctx.author.id}/coins", "r+").read()
-        if int(current_coins) >= 100000:
+        if int(current_coins) >= 10000:
             if "active" in uwu_array:
-                await ctx.send("Você compwou o benyefício 2. Wesponda a essa mensagem como você quew o comando.")
+                await ctx.send("Você compwou o benyefício 2. Pwimeiwamente, wesponda a essa mensagem com o nyome do comando. (Exempwo, se você cowocaw 'exampwe', seu comando vai sew 'cd$exampwe')")
             else:
-                await ctx.send("Você comprou o benefício 2. Responda a essa mensagem como você quer o comando.")
+                await ctx.send("Você comprou o benefício 2. Primeiramente, responda a essa mensagem com o nome do comando. (Exemplo, se você colocar 'example', seu comando vai ser 'cd$example')")
 
             def sus(m):
                 return m.author == ctx.author
 
             try:
-                msg = await bot.wait_for('message', check=sus)
+                msg1 = await bot.wait_for('message', check=sus)
             except asyncio.TimeoutError:
                 await ctx.send('Compra cancelada. Tente novamente.')
             else:
-                await ctx.send('Comando registrado.')
-                new_coins = int(current_coins) - 100000
-                with open(f'profile/{ctx.author.id}/coins', 'w') as f:
-                    f.write(str(new_coins))
-                admmasterblaster = await bot.fetch_user("727194765610713138")
-                await admmasterblaster.send(f"""Atenção Adm, o {ctx.author.name} comprou um comando personalizado. Ele quer desse jeito: "{msg.content}" """)
+                array = ["adivinhar", "ajuda", "avatar", "battle", "cancelamento", "casamento", "comprar", "daily", "darpremium", "doar", "duelo", "help", "investir", "jogo", "lojinha", "nsfw", "ping", "ppp", "ppt", "premium", "profile", "rank", "rinha", "roleta", "sabio", "sobre", "sync", "uwu"]
+                if msg1.content.lower() in array:
+                    await ctx.reply("Oops, esse comando já existe.")
+                    return
+                else:
+                    if Path(f"custom_commands/{msg1.content.lower()}").exists() is True:
+                        await ctx.reply("Oops, esse comando já existe.")
+                        return
+                if "active" in uwu_array:
+                    await ctx.send("gowa, wesponda a essa mensagem com o que você quew que o comando mande (GIFs, mensagens, etc)")
+                else:
+                    await ctx.send("Agora, responda a essa mensagem com o que você quer que o comando mande (GIFs, mensagens, etc)")
+
+                def sus(m):
+                    return m.author == ctx.author
+
+                try:
+                    msg2 = await bot.wait_for('message', check=sus)
+                except asyncio.TimeoutError:
+                    await ctx.send('Compra cancelada. Tente novamente.')
+                else:
+                    await ctx.send('Comando registrado.')
+                    new_coins = int(current_coins) - 10000
+                    with open(f'profile/{ctx.author.id}/coins', 'w') as f:
+                        f.write(str(new_coins))
+                    with open(f'custom_commands/{msg1.content.lower()}', 'w') as f:
+                        f.write(msg2.content)
         else:
             if "active" not in uwu_array:
                 await ctx.send("Ah mais que triste. Você não tem PadolaCoins o suficiente. (Dica: d$comprar)")
@@ -491,7 +723,7 @@ async def lojinha(ctx, arg1=None):
                             value="Não seja afetado pewo coowdown das apostas e d-duelo pow 40 m-minyutos - 500 PadowaCoins",
                             inline=False)
             embed.add_field(name="II - C-Comando customizado",
-                            value="cowoque :3 um comando customizado com seu usewnyame ;;w;; - 100,000 PadowaCoins",
+                            value="cowoque :3 um comando customizado com seu usewnyame ;;w;; - 10,000 PadowaCoins",
                             inline=False)
             embed.add_field(name="III - Sonyegaw impostos",
                             value="Seja um fowa da wei e pague zewo impostos nya s-suas twansfewencias pow 40 m-minyutos - 1,500 PadowaCoins",
@@ -508,7 +740,7 @@ async def lojinha(ctx, arg1=None):
                             value="Não seja afetado pelo cooldown das apostas e duelos por 40 minutos - 500 PadolaCoins",
                             inline=False)
             embed.add_field(name="II - Comando customizado",
-                            value="Coloque um comando customizado com seu username - 100,000 PadolaCoins",
+                            value="Coloque um comando customizado com seu username - 10,000 PadolaCoins",
                             inline=False)
             embed.add_field(name="III - Sonegar impostos",
                             value="Seja um fora da lei e pague zero impostos na suas transferencias por 40 minutos - 1,500 PadolaCoins",
@@ -522,9 +754,10 @@ async def lojinha(ctx, arg1=None):
 
 # Investir
 # Perder ou ganhar? É o bot quem decide.
-@bot.command()
+@bot.hybrid_command(name="investir", description="O lobo de Wall Street")
+@app_commands.describe(arg1="A quantidade para investir")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
-async def investir(ctx, arg1: int):
+async def investir(ctx, arg1: int) -> None:
     checkprofile(ctx.author.id)
 
     investir_random = ["win", "lose", "lose", "lose", "win", "lose", "win", "lose"]
@@ -562,11 +795,11 @@ async def investir(ctx, arg1: int):
 
 # Roleta
 # Roda a Roda jequiti
-@bot.command()
+@bot.hybrid_command(name="roleta", description="Roda a Roda Jequiti")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def roleta(ctx):
     checkprofile(ctx.author.id)
-    roleta_random = [100, 10, 50, 200, 0, 100, 10, 10, 400, 400, 200, 200, 100, 100, 10, 200, 0, 0, 400]
+    roleta_random = [1100, 110, 150, 1200, 0, 1100, 110, 110, 1400, 1400, 1200, 1200, 1100, 1100, 110, 1200, 0, 0, 1400]
     resultado = random.choice(roleta_random)
 
     if ctx.author in roleta_cooldown:
@@ -591,7 +824,8 @@ async def roleta(ctx):
 
 # Doar
 # MrBeast
-@bot.command()
+@bot.hybrid_command(name="doar", description="Doe dinheiro para pessoas!")
+@app_commands.describe(amount="A quantidade de PadolaCoins", user="A Pessoa para quem você quer doar")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def doar(ctx, amount: int, user: discord.Member):
     checkprofile(ctx.author.id)
@@ -635,9 +869,43 @@ async def doar(ctx, amount: int, user: discord.Member):
                     await ctx.send(f"Você transferiu {humanize.intcomma(amount)} Padola coins para {user.mention}! (Sem impostos cobrados)")
 
 
-@bot.command()
+@bot.hybrid_command(name="adivinhar", description="Adivinhe um número e ganhe sonhos... ou perca eles...")
+@app_commands.describe(amount="A quantia que você quer apostar", number="O número em qual você quer apostar")
+@commands.cooldown(1, cooldown_command, commands.BucketType.user)
+async def adivinhar(ctx, amount: int, number: app_commands.Range[int, 0, 10]):
+    possibilities = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    checkprofile(ctx.author.id)
+    if amount > int(open(f"profile/{ctx.author.id}/coins", "r+").read()):
+        if 'active' in uwu_array:
+            await ctx.reply("me *screeches* pawece que você não pode cobwiw essa aposta... (Dica UWU: d$comprar)")
+        else:
+            await ctx.reply("Me parece que você não pode cobrir essa aposta... (Dica: d$comprar)")
+    else:
+        if number == random.choice(possibilities):
+            if 'active' in uwu_array:
+                await ctx.reply(f"Pawabéns!!11 Você acewtou, e ganhou {humanize.intcomma(amount)}!")
+            else:
+                await ctx.reply(f"Parabéns! Você acertou, e ganhou {humanize.intcomma(amount)}!")
+            current_coins_user = open(f"profile/{ctx.author.id}/coins", "r+").read()
+            new_coins_user = int(current_coins_user) + amount
+            with open(f'profile/{ctx.author.id}/coins', 'w') as f:
+                f.write(str(int(new_coins_user)))
+        else:
+            if 'active' in uwu_array:
+                await ctx.reply(f"Poxa!!11 Você pewdeu  {humanize.intcomma(amount)}...")
+            else:
+                await ctx.reply(f"Poxa! Você perdeu {humanize.intcomma(amount)}...")
+            current_coins_user = open(f"profile/{ctx.author.id}/coins", "r+").read()
+            new_coins_user = int(current_coins_user) - amount
+            with open(f'profile/{ctx.author.id}/coins', 'w') as f:
+                f.write(str(int(new_coins_user)))
+
+
+@bot.hybrid_command(name="rinha", description="Perca sua fortuna apostando!")
+@app_commands.describe(amount="A quantidade de PadolaCoins", user="A Pessoa com quem você quer apostar")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def rinha(ctx, amount: int, user: discord.Member):
+    blah = user
     checkprofile(ctx.author.id)
     if ctx.author in rinha_cooldown:
         if 'active' in uwu_array:
@@ -671,7 +939,7 @@ async def rinha(ctx, amount: int, user: discord.Member):
                     await aposta_message.add_reaction('👍')
 
                     def check(reaction, user):
-                        return user == user and str(reaction.emoji) == '👍'
+                        return user == blah and str(reaction.emoji) == '👍'
                     try:
                         reaction, user = await bot.wait_for('reaction_add', timeout=15.0, check=check)
                     except asyncio.TimeoutError:
@@ -680,10 +948,6 @@ async def rinha(ctx, amount: int, user: discord.Member):
                         else:
                             await ctx.send("Aposta cancelada")
                     else:
-                        if 'active' in uwu_array:
-                            await ctx.send(f"O Ganhadow foi...")
-                        else:
-                            await ctx.send(f"O Ganhador foi...")
                         things = ["win", "lose", "win", "lose", "win", "lose", "win", "lose", "win", "lose"]
                         resultado = random.choice(things)
                         # You see this text down here? Pretty messy heh?
@@ -691,9 +955,9 @@ async def rinha(ctx, amount: int, user: discord.Member):
                         # The code has a absolutely stroke, so I don't reccoment changing anything here.
                         if resultado == 'win':
                             if 'active' in uwu_array:
-                                await ctx.send(f"{ctx.author.mention}!!11 Pawabéns, você ganhou {humanize.intcomma(amount)} :3 PadowaCoins?!?1")
+                                await aposta_message.edit(content=f"O Ganhadow foi...\n{ctx.author.mention}!!11 Pawabéns, você ganhou {humanize.intcomma(amount)} :3 PadowaCoins?!?1")
                             else:
-                                await ctx.send(f"{ctx.author.mention}! Parabéns, você ganhou {humanize.intcomma(amount)} PadolaCoins!")
+                                await aposta_message.edit(content=f"O Ganhador foi...\n{ctx.author.mention}! Parabéns, você ganhou {humanize.intcomma(amount)} PadolaCoins!")
                             current_coins = open(f"profile/{ctx.author.id}/coins", "r+").read()
                             new_coins = int(current_coins) + amount
                             current_coins_user = open(f"profile/{user.id}/coins", "r+").read()
@@ -709,9 +973,9 @@ async def rinha(ctx, amount: int, user: discord.Member):
 
                         else:
                             if 'active' in uwu_array:
-                                await ctx.send(f"{user.mention}!!11 Pawabéns, você ganhou {humanize.intcomma(amount)} :3 PadowaCoins?!?1")
+                                await aposta_message.edit(content=f"O Ganhadow foi...\n{user.mention}!!11 Pawabéns, você ganhou {humanize.intcomma(amount)} :3 PadowaCoins?!?1")
                             else:
-                                await ctx.send(f"{user.mention}! Parabéns, você ganhou {humanize.intcomma(amount)} PadolaCoins!")
+                                await aposta_message.edit(content=f"O Ganhador foi...\n{user.mention}! Parabéns, você ganhou {humanize.intcomma(amount)} PadolaCoins!")
                             current_coins = open(f"profile/{ctx.author.id}/coins", "r+").read()
                             new_coins = int(current_coins) - amount
                             current_coins_user = open(f"profile/{user.id}/coins", "r+").read()
@@ -732,11 +996,13 @@ async def rinha(ctx, amount: int, user: discord.Member):
 
 # Duelo
 # Extremamente utíl pra fazer GF- D-Digo, roleplay.
-@bot.command()
+@bot.hybrid_command(name="duelo", description="Resolva seus problemas com honra...")
+@app_commands.describe(user="A Pessoa com quem você quer duelar")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def duelo(ctx, user: discord.Member):
+    blah = user
     checkprofile(ctx.author.id)
-    if ctx.channel.id == 767851776212336642:
+    if ctx.channel.id == 1164700096668114975:
         if 'active' in uwu_array:
             await ctx.send("O Tiwan- digo, ADM do Sewvew mandou tiwaw esse comando do G-Gewaw. Foi maw?!?1")
         else:
@@ -762,7 +1028,7 @@ async def duelo(ctx, user: discord.Member):
                 await aposta_message.add_reaction('⚔️')
 
                 def check(reaction, user):
-                    return user == user and str(reaction.emoji) == '⚔️'
+                    return user == blah and str(reaction.emoji) == '⚔️'
 
                 try:
                     reaction, user = await bot.wait_for('reaction_add', timeout=15.0, check=check)
@@ -772,16 +1038,12 @@ async def duelo(ctx, user: discord.Member):
                     else:
                         await ctx.send("Duelo cancelada")
                 else:
-                    if 'active' in uwu_array:
-                        await ctx.send(f"O Ganhadow foi...")
-                    else:
-                        await ctx.send(f"O Ganhador foi...")
                     resultado = random.choice(["win", "lose"])
                     if resultado == 'win':
                         if 'active' in uwu_array:
-                            await ctx.send(f"{ctx.author.mention}!!11 Pawabéns, você ganhou o d-duelo!")
+                            await aposta_message.edit(content=f"O Ganhadow foi...\n{ctx.author.mention}!!11 Pawabéns, você ganhou o d-duelo!")
                         else:
-                            await ctx.send(f"{ctx.author.mention}! Parabéns, você ganhou duelo!")
+                            await aposta_message.edit(content=f"O Ganhador foi...\n{ctx.author.mention}! Parabéns, você ganhou duelo!")
                         current_duels_user = open(f"profile/{ctx.author.id}/duelos_vencidos", "r+").read()
                         new_duels_user = int(current_duels_user) + 1
                         with open(f'profile/{ctx.author.id}/duelos_vencidos', 'w') as f:
@@ -793,9 +1055,9 @@ async def duelo(ctx, user: discord.Member):
 
                     else:
                         if 'active' in uwu_array:
-                            await ctx.send(f"{user.mention}!!11 Pawabéns, você ganhou o d-duelo!")
+                            await aposta_message.edit(content=f"O Ganhadow foi...\n{user.mention}!!11 Pawabéns, você ganhou o d-duelo!")
                         else:
-                            await ctx.send(f"{user.mention}! Parabéns, você ganhou o duelo!")
+                            await aposta_message.edit(content=f"O Ganhador foi...\n{user.mention}! Parabéns, você ganhou o duelo!")
                         current_duels_user = open(f"profile/{user.id}/duelos_vencidos", "r+").read()
                         new_duels_user = int(current_duels_user) + 1
                         with open(f'profile/{user.id}/duelos_vencidos', 'w') as f:
@@ -879,53 +1141,10 @@ Diminui a quantidade de XP de uma pessoa.
     await ctx.author.send(texto)
 
 
-# The worst command ever
-def rank_command(arg1, multiplier):
-    if arg1 == "coins":
-        the_ranked_array = []
-        profiles = os.listdir("profile")
-        profiles.remove("727194765610713138")
-        for profile in profiles:
-            coins = open(f"profile/{profile}/coins", "r+").read()
-            the_ranked_array.append({'name': f'{bot.get_user(int(profile))}', 'coins': int(coins)})
-        newlist = sorted(the_ranked_array, key=lambda d: d['coins'], reverse=True)
-        the_array_to_send = []
-        the_actual_array = []
-        backslash = '\n'
-        val = 5 * multiplier
-        for idx, thing in enumerate(newlist):
-            the_array_to_send.append(f"{idx+1} - {thing['name'].split('#')[0]}: P£ {humanize.intcomma(thing['coins'])}")
-        for i in range(val, val + 5):
-            the_actual_array.append(the_array_to_send[i])
-        thing = f"""
-{backslash.join(the_actual_array)}
-"""
-    elif arg1 == "xp":
-        the_ranked_array = []
-        profiles = os.listdir("profile")
-        for profile in profiles:
-            checkprofile(profile)
-            coins = open(f"profile/{profile}/experience", "r+").read()
-            the_ranked_array.append({'name': f'{bot.get_user(int(profile))}', 'coins': int(coins)})
-        newlist = sorted(the_ranked_array, key=lambda d: d['coins'], reverse=True)
-        the_array_to_send = []
-        the_actual_array = []
-        backslash = '\n'
-        val = 5 * multiplier
-        for idx, thing in enumerate(newlist):
-            the_array_to_send.append(f"{idx+1} - {thing['name'].split('#')[0]}: {humanize.intcomma(thing['coins'])} XP")
-        for i in range(val, val + 5):
-            the_actual_array.append(the_array_to_send[i])
-
-        thing = f"""
-{backslash.join(the_actual_array)}
-"""
-    return thing
-
-
 # Avatar
 # See user avatar
-@bot.command()
+@bot.hybrid_command(name="avatar", description="Veja a foto de perfil dos seus amigos!")
+@app_commands.describe(user="A Pessoa que você quer ver a foto")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def avatar(ctx, user: discord.Member):
     embed = discord.Embed(title=f"Avatar de {user.display_name}",
@@ -938,55 +1157,66 @@ async def avatar(ctx, user: discord.Member):
 
 # Casamento
 # Casar no discord... é mole?
-@bot.command()
+@bot.hybrid_command(name="casamento", description="Até que a morte os separe!")
+@app_commands.describe(arg1="Escolha se quer se casar ou se divorciar", user="A Pessoa especial")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
-async def casamento(ctx, arg1, user: discord.Member):
+async def casamento(ctx, arg1: Literal["casar", "divorciar"], user: discord.Member):
+    blah = user
     checkprofile(ctx.author.id)
     checkprofile(user.id)
     if arg1 == "casar":
-        if Path(f"profile/{ctx.author.id}/casado").is_file() is True:
-            if 'active' in uwu_array:
-                await ctx.send(f"Você já é casado!!11")
-            else:
-                await ctx.send(f"Você já é casado!")
-            other = bot.get_user(int(open(f"profile/{ctx.author.id}/casado", "r+").read()))
-            await other.send(f"Não é querendo ser fofoqueiro... mais o {ctx.author.display_name} tentou se casar com outra pessoa... 👀👀👀")
+        if user.id == 1167643852786638889:
+            await ctx.reply("Olha... eu te vejo só como amigo... me desculpa...")
         else:
-            if ctx.author in depression:
+            if Path(f"profile/{user.id}/casado").is_file() is True:
                 if 'active' in uwu_array:
-                    await ctx.send(f"Você está em depwessão?!! Espewe m-mais um tempo pawa se casaw...")
+                    await ctx.send(f"Essa pessoa já está casada *screams* com awguém...")
                 else:
-                    await ctx.send(f"Você está em depressão! Espere mais um tempo para se casar...")
-            if 'active' in uwu_array:
-                aposta_message = await ctx.send(f"**Atenção {user.mention}, *screeches* o {ctx.author.mention} gostawia de se c-c-casaw com você. Weaja a essa mensagem com um e-emoji de casamento (💒) pawa concowdaw com a cewimônyia.**")
+                    await ctx.send(f"Essa pessoa já está casada com alguém...")
             else:
-                aposta_message = await ctx.send(f"**Atenção {user.mention}, o {ctx.author.mention} gostaria de se casar com você. Reaja a essa mensagem com um emoji de casamento (💒) para concordar com a cerimônia.**")
-            await aposta_message.add_reaction('💒')
-
-            def check(reaction, user):
-                return user == user and str(reaction.emoji) == '💒'
-
-            try:
-                reaction, user = await bot.wait_for('reaction_add', timeout=15.0, check=check)
-            except asyncio.TimeoutError:
-                if 'active' in uwu_array:
-                    await ctx.send(f"Casamento cancewado?!?1 {ctx.author.display_name} agowa entwou em depwessão...")
+                if Path(f"profile/{ctx.author.id}/casado").is_file() is True:
+                    if 'active' in uwu_array:
+                        await ctx.send(f"Você já é casado!!11")
+                    else:
+                        await ctx.send(f"Você já é casado!")
+                    other = bot.get_user(int(open(f"profile/{ctx.author.id}/casado", "r+").read()))
+                    await other.send(f"Não é querendo ser fofoqueiro... mais o {ctx.author.display_name} tentou se casar com outra pessoa... 👀👀👀")
                 else:
-                    await ctx.send(f"Casamento cancelado! {ctx.author.display_name} agora entrou em depressão...")
-                depression.append(ctx.author)
-                await asyncio.sleep(60)
-                depression.remove(ctx.author)
-            else:
-                embed = discord.Embed(title=f"💍 {ctx.author.display_name} agora é casado com {user.display_name}! 💍",
-                                      colour=0x00b0f4)
+                    if ctx.author in depression:
+                        if 'active' in uwu_array:
+                            await ctx.send(f"Você está em depwessão?!! Espewe m-mais um tempo pawa se casaw...")
+                        else:
+                            await ctx.send(f"Você está em depressão! Espere mais um tempo para se casar...")
+                    if 'active' in uwu_array:
+                        aposta_message = await ctx.send(f"**Atenção {user.mention}, *screeches* o {ctx.author.mention} gostawia de se c-c-casaw com você. Weaja a essa mensagem com um e-emoji de casamento (💒) pawa concowdaw com a cewimônyia.**")
+                    else:
+                        aposta_message = await ctx.send(f"**Atenção {user.mention}, o {ctx.author.mention} gostaria de se casar com você. Reaja a essa mensagem com um emoji de casamento (💒) para concordar com a cerimônia.**")
+                    await aposta_message.add_reaction('💒')
 
-                embed.set_image(url="https://cdn.discordapp.com/attachments/1164700096668114975/1172541249077653514/image0.gif?ex=6560b122&is=654e3c22&hm=02abfda2588e3a62874ba2c16ea8e579bf5dba86b197bfc2fd36478e8ac6832f&")
+                    def check(reaction, user):
+                        return user == blah and str(reaction.emoji) == '💒'
 
-                await ctx.send(embed=embed)
-                with open(f'profile/{user.id}/casado', 'w') as f:
-                    f.write(str(ctx.author.id))
-                with open(f'profile/{ctx.author.id}/casado', 'w') as f:
-                    f.write(str(user.id))
+                    try:
+                        reaction, user = await bot.wait_for('reaction_add', timeout=15.0, check=check)
+                    except asyncio.TimeoutError:
+                        if 'active' in uwu_array:
+                            await aposta_message.edit(content=f"Casamento cancewado?!?1 {ctx.author.display_name} agowa entwou em depwessão...")
+                        else:
+                            await aposta_message.edit(content=f"Casamento cancelado! {ctx.author.display_name} agora entrou em depressão...")
+                        depression.append(ctx.author)
+                        await asyncio.sleep(60)
+                        depression.remove(ctx.author)
+                    else:
+                        embed = discord.Embed(title=f"💍 {ctx.author.display_name} agora é casado com {user.display_name}! 💍",
+                                              colour=0x00b0f4)
+
+                        embed.set_image(url="https://cdn.discordapp.com/attachments/1164700096668114975/1172541249077653514/image0.gif?ex=6560b122&is=654e3c22&hm=02abfda2588e3a62874ba2c16ea8e579bf5dba86b197bfc2fd36478e8ac6832f&")
+
+                        await aposta_message.edit(embed=embed, content="")
+                        with open(f'profile/{user.id}/casado', 'w') as f:
+                            f.write(str(ctx.author.id))
+                        with open(f'profile/{ctx.author.id}/casado', 'w') as f:
+                            f.write(str(user.id))
     elif arg1 == "divorciar":
         if Path(f"profile/{ctx.author.id}/casado").is_file() is True:
             other = bot.get_user(int(open(f"profile/{ctx.author.id}/casado", "r+").read()))
@@ -1001,9 +1231,11 @@ async def casamento(ctx, arg1, user: discord.Member):
             await ctx.send("Você nem é casado!")
 
 
-@bot.command()
+@bot.hybrid_command(name="rank", description="Veja o Rank de XP ou de PadolaCoins")
+@app_commands.describe(arg1="Ver o rank de XP ou de PadolaCoins?")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
-async def rank(ctx, arg1="coins"):
+async def rank(ctx, arg1: Literal["coins", "xp"] | None = None):
+    arg1 = arg1 or "coins"
     if arg1 == 'coins':
         ranked_arg = 'coins'
         another_thing = 'ricos'
@@ -1069,6 +1301,93 @@ async def rank(ctx, arg1="coins"):
             break
             # ending the loop if user doesn't react after x seconds
 
+
+@bot.hybrid_command(name="darpremium", description="Comando pro ADM te dar premium")
+@app_commands.describe(user="Quem comprou?")
+@commands.cooldown(1, cooldown_command, commands.BucketType.user)
+async def darpremium(ctx, user: discord.Member):
+    checkprofile(user.id)
+    if ctx.author.id == 727194765610713138:
+        if Path(f"profile/{user.id}/premium").exists() is True:
+            await ctx.send("Pô ADM, ele já é Premium...")
+        else:
+            os.makedirs(f"profile/{user.id}/premium")
+            current_date = datetime.date.today()
+            with open(f'profile/{user.id}/premium/date', 'w') as f:
+                f.write(current_date.isoformat())
+            current_coins_user = open(f"profile/{user.id}/coins", "r+").read()
+            new_coins_user = int(current_coins_user) + 100000
+            with open(f'profile/{user.id}/coins', 'w') as f:
+                f.write(str(new_coins_user))
+            if 'active' in uwu_array:
+                await ctx.send(f"pawabéns *sweats* {user.mention}, você agowa é pwemium?!! Você já pode a-apwuvitaw todos os benyefícios, e P£ *blushes* 100K já fowam *twerks* twansfewidos pawa s-s-sua conta. Obwigado pow apoiaw o Denji?!?!")
+            else:
+                await ctx.send(f"Parabéns {user.mention}, você agora é premium! Você já pode aproveitar todos os benefícios, e P£ 100K já foram transferidos para sua conta. Obrigado por apoiar o Denji!")
+    else:
+        await ctx.send("Você não é o ADM...")
+
+
+@bot.hybrid_command(name="nsfw", description="Pra Garantir a Famosa Fanheta")
+@app_commands.describe(tag="Suas Tags preferidas hehehe")
+@commands.cooldown(1, cooldown_command, commands.BucketType.user)
+async def nsfw(ctx, tag: Literal["ass", "hentai", "milf", "oral", "paizuri", "ecchi", "ero"] | None = None):
+    if Path(f"config_nsfw.toml").exists() is False:
+        with open(f'config_nsfw.toml', 'w') as f:
+            f.write("channels = []")
+    with open("config_nsfw.toml", mode="r") as fp:
+        config = toml.load(fp)
+    if ctx.channel.id in config["channels"]:
+        arg1 = tag or None
+        wf = WaifuAioClient()
+        if arg1 is None:
+            images = await wf.search(
+                is_nsfw='True',
+            )
+        else:
+            images = await wf.search(
+                included_tags=[arg1],
+                is_nsfw='True',
+            )
+        embed = discord.Embed(title="NSFW")
+
+        embed.set_image(url=images.url)
+
+        await ctx.reply(embed=embed)
+    else:
+        await ctx.reply("O Administrador não autorizou o uso desse comando neste canal.")
+
+
+@bot.hybrid_command(name="ppp", description="Pego, penso e passo")
+@commands.cooldown(1, cooldown_command, commands.BucketType.user)
+async def ppp(ctx):
+    oldlist = ctx.guild.members
+    verycoollist = []
+    mention_list = []
+    for member in oldlist:
+        if member.bot is True:
+            pass
+        else:
+            if member == ctx.author:
+                pass
+            else:
+                checkprofile(member.id)
+                if int(open(f"profile/{member.id}/experience", "r+").read()) >= 500:
+                    verycoollist.append(member)
+                else:
+                    pass
+    while True:
+        if len(mention_list) == 3:
+            break
+        while True:
+            thing = random.choice(verycoollist).display_name
+            if thing not in mention_list:
+                mention_list.append(thing)
+                break
+            else:
+                pass
+    await ctx.reply(f"""{mention_list[0]}
+{mention_list[1]}
+{mention_list[2]}""")
 
 
 bot.run(open(f"token", "r+").read(), log_level=logging.INFO)

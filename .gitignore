@@ -1,4 +1,6 @@
 token
 profile/*
 bot-env/
+custom_commands/
 webhook_custom.v
+.gitignore
