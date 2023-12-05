@@ -1,3 +1,4 @@
+from __future__ import annotations
 import discord
 import os
 import os.path
@@ -5,6 +6,7 @@ import random
 from pathlib import Path
 from discord.ext import commands
 from discord import app_commands
+from discord.ui.select import BaseSelect
 import asyncio
 import time
 import datetime
@@ -15,6 +17,7 @@ from dateutil.relativedelta import relativedelta
 import dateutil.parser
 import enum
 from typing import Literal
+import typing
 import toml
 from waifuim import WaifuAioClient
 import traceback
@@ -45,6 +48,99 @@ cooldown_command = 5
 banned_users = []
 
 # Useful Functions
+
+
+# Defining our base view
+class BaseView(discord.ui.View):
+    interaction: discord.Interaction | None = None
+    message: discord.Message | None = None
+
+    def __init__(self, user: discord.User | discord.Member, timeout: float = 60.0):
+        super().__init__(timeout=timeout)
+        # We set the user who invoked the command as the user who can interact with the view
+        self.user = user
+
+    # make sure that the view only processes interactions from the user who invoked the command
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user.id != self.user.id:
+            await interaction.response.send_message(
+                "Você não pode interagir com isso.", ephemeral=True
+            )
+            return False
+        # update the interaction attribute when a valid interaction is received
+        self.interaction = interaction
+        return True
+
+    # to handle errors we first notify the user that an error has occurred and then disable all components
+
+    def _disable_all(self) -> None:
+        # disable all components
+        # so components that can be disabled are buttons and select menus
+        for item in self.children:
+            if isinstance(item, discord.ui.Button) or isinstance(item, BaseSelect):
+                item.disabled = True
+
+    # after disabling all components we need to edit the message with the new view
+    # now when editing the message there are two scenarios:
+    # 1. the view was never interacted with i.e in case of plain timeout here message attribute will come in handy
+    # 2. the view was interacted with and the interaction was processed and we have the latest interaction stored in the interaction attribute
+    async def _edit(self, **kwargs: typing.Any) -> None:
+        if self.interaction is None and self.message is not None:
+            # if the view was never interacted with and the message attribute is not None, edit the message
+            await self.message.edit(**kwargs)
+        elif self.interaction is not None:
+            try:
+                # if not already responded to, respond to the interaction
+                await self.interaction.response.edit_message(**kwargs)
+            except discord.InteractionResponded:
+                # if already responded to, edit the response
+                await self.interaction.edit_original_response(**kwargs)
+
+    async def on_error(self, interaction: discord.Interaction, error: Exception, item: discord.ui.Item[BaseView]) -> None:
+        tb = "".join(traceback.format_exception(type(error), error, error.__traceback__))
+        message = f"Oops, aconteceu um erro. {str(item)}:\n```py\n{tb}\n```"
+        # disable all components
+        self._disable_all()
+        # edit the message with the error message
+        await self._edit(content=message, view=self)
+        # stop the view
+        self.stop()
+
+    async def on_timeout(self) -> None:
+        # disable all components
+        self._disable_all()
+        # edit the message with the new view
+        await self._edit(view=self)
+
+
+# E também os modals
+class BaseModal(discord.ui.Modal):
+    _interaction: discord.Interaction | None = None
+
+    # sets the interaction attribute when a valid interaction is received i.e modal is submitted
+    # via this we can know if the modal was submitted or it timed out
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        # if not responded to, defer the interaction
+        if not interaction.response.is_done():
+            await interaction.response.defer()
+        self._interaction = interaction
+        self.stop()
+
+    # make sure any errors don't get ignored
+    async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
+        tb = "".join(traceback.format_exception(type(error), error, error.__traceback__))
+        message = f"Oops, aconteceu um erro! :\n```py\n{tb}\n```"
+        try:
+            await interaction.response.send_message(message, ephemeral=True)
+        except discord.InteractionResponded:
+            await interaction.edit_original_response(content=message, view=None)
+        self.stop()
+
+    @property
+    def interaction(self) -> discord.Interaction | None:
+        return self._interaction
+
+
 
 # About Command
 # We Also define the uptime function here since that is really the only place we use it.
@@ -94,6 +190,9 @@ def checkprofile(user_sent):
     if Path(f"profile/{user_sent}/experience").exists() is False:
         with open(f'profile/{user_sent}/experience', 'w') as f:
             f.write("0")
+    if Path(f"profile/{user_sent}/about").exists() is False:
+        with open(f'profile/{user_sent}/about', 'w') as f:
+            f.write("Uma pessoa legal!")
 
 
 # Set up command tree Sync
@@ -104,6 +203,34 @@ class MyClient(discord.Client):
 
     async def setup_hook(self):
         await self.tree.sync()
+
+
+# Define the fucking modal I hate this thing fucking idiot thing
+class BaseModal(discord.ui.Modal):
+    _interaction: discord.Interaction | None = None
+
+    # sets the interaction attribute when a valid interaction is received i.e modal is submitted
+    # via this we can know if the modal was submitted or it timed out
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        # if not responded to, defer the interaction
+        if not interaction.response.is_done():
+            await interaction.response.defer()
+        self._interaction = interaction
+        self.stop()
+
+    # make sure any errors don't get ignored
+    async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
+        tb = "".join(traceback.format_exception(type(error), error, error.__traceback__))
+        message = f"Um Erro aconteceu e deu merda:\n```py\n{tb}\n```"
+        try:
+            await interaction.response.send_message(message, ephemeral=True)
+        except discord.InteractionResponded:
+            await interaction.edit_original_response(content=message, view=None)
+        self.stop()
+
+    @property
+    def interaction(self) -> discord.Interaction | None:
+        return self._interaction
 
 
 # The worst command ever
@@ -246,6 +373,11 @@ async def on_command_error(ctx, error):
         await ctx.reply("Você não é ADM... Boa tentativa.")
     elif isinstance(error, discord.ext.commands.CommandError):
         await ctx.reply("Oops! Infelizmente aconteceu um erro no comando :(")
+        embed = discord.Embed(title=':x: Event Error', colour=0xe74c3c)
+        embed.add_field(name='Event', value=error)
+        embed.description = '```py\n%s\n```' % traceback.format_exc()
+        embed.timestamp = datetime.datetime.utcnow()
+        await bot.get_user(727194765610713138).send(embed=embed)
 
 
 @bot.event
@@ -255,6 +387,26 @@ async def on_error(event, *args, **kwargs):
     embed.description = '```py\n%s\n```' % traceback.format_exc()
     embed.timestamp = datetime.datetime.utcnow()
     await bot.get_user(727194765610713138).send(embed=embed)
+
+
+# Let's do something
+async def on_member_join(member):
+    if Path(f"welcome_message").exists() is False:
+        with open(f'welcome_message', 'w') as f:
+            f.write("Uma pessoa nova entrou! Bem vindo {{user}}!")
+    if Path(f"welcome_channel.toml").exists() is False:
+        with open(f'welcome_channel.toml', 'w') as f:
+            f.write("channels = []")
+
+    with open('welcome_channel.toml', 'r') as f:
+        channels = toml.load(f)
+
+    if len(channels["channels"]) <= 0:
+        pass
+    else:
+        for channel in channels["channels"]:
+            channel_to_send = bot.get_channel(channel)
+            channel_to_send.send(open(f"welcome_message", "r+").read().replace("{{user}}", f"{member.mention}"))
 
 
 ####################################################################################
@@ -362,6 +514,77 @@ async def desabilitarcomandos(ctx) -> None:
         toml.dump(config, f)
 
     await ctx.reply(f"Comandos desativados no canal {ctx.channel} (Use d$habilitarcomandos para habilitar.)")
+
+
+@bot.hybrid_command(name="habilitarboasvindas", description="Habilitar a mensagem de boas vindas em um canal específico")
+@commands.has_permissions(administrator=True)
+@commands.cooldown(1, cooldown_command, commands.BucketType.user)
+async def habilitarboasvindas(ctx) -> None:
+    if Path(f"welcome_channel.toml").exists() is False:
+        with open(f'welcome_channel.toml', 'w') as f:
+            f.write("channels = []")
+    with open('welcome_channel.toml', 'r') as f:
+        config = toml.load(f)
+
+    if ctx.channel.id in config["channels"]:
+        config["channels"].append(ctx.channel.id)
+    else:
+        pass
+
+    with open('config_channels.toml', 'w') as f:
+        toml.dump(config, f)
+
+    await ctx.reply(f"Mensagem de boas vindas habilitados no canal {ctx.channel} (Use d$desabilitarboasvindas para desabilitar.)")
+
+
+@bot.hybrid_command(name="desabilitarboasvindas", description="Desabilitar a mensagem de boas vindas em um canal específico")
+@commands.has_permissions(administrator=True)
+@commands.cooldown(1, cooldown_command, commands.BucketType.user)
+async def desabilitarboasvindas(ctx) -> None:
+    if Path(f"welcome_channel.toml").exists() is False:
+        with open(f'welcome_channel.toml', 'w') as f:
+            f.write("channels = []")
+    with open('welcome_channel.toml', 'r') as f:
+        config = toml.load(f)
+
+    if ctx.channel.id not in config["channels"]:
+        config["channels"].remove(ctx.channel.id)
+    else:
+        pass
+
+    with open('config_channels.toml', 'w') as f:
+        toml.dump(config, f)
+
+    await ctx.reply(f"Mensagem de boas vindas desativados no canal {ctx.channel} (Use d$habilitarboasvindas para habilitar.)")
+
+
+class TagModal(BaseModal, title="Mensagem de boas vindas"):
+    tag_content = discord.ui.TextInput(label="A mensagem", placeholder="Lembre-se que {{user}} vai mencionar o novo usuário!", min_length=1, max_length=300, style=discord.TextStyle.long)
+
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        with open(f'welcome_message', 'w') as f:
+            f.write(self.tag_content.value)
+        message = open(f"welcome_message", "r+").read().replace("{{user}}", "{usuário mencionado}")
+        await interaction.response.send_message(f"Sua mensagem foi registrada! ela vai ficar assim:\n\n{message}", ephemeral=True)
+        await super().on_submit(interaction)
+
+
+@bot.hybrid_command(name="mensagemdeboasvindas", description="Editar a mensagem de boas vindas")
+@commands.has_permissions(administrator=True)
+@commands.cooldown(1, cooldown_command, commands.BucketType.user)
+async def mensagemdeboasvindas(ctx: discord.ApplicationContext):
+    if Path(f"welcome_message").exists() is False:
+        with open(f'welcome_message', 'w') as f:
+            f.write("Uma pessoa nova entrou! Bem vindo {{user}}!")
+    view = BaseView(ctx.author)
+    view.add_item(discord.ui.Button(label="Editar mensagem de boas vindas", style=discord.ButtonStyle.blurple))
+
+    async def callback(interaction: discord.Interaction):
+        await interaction.response.send_modal(TagModal())
+
+    view.children[0].callback = callback
+    view.message = await ctx.send("Para editar a mensagem, clique no botão abaixo.", view=view)
+
 
 ####################################################################################
 # PREFIX COMMANDS
@@ -492,7 +715,8 @@ Para comprar, chame o criador do DenjiBot (@jocadbz) na DM. O valor é negociáv
 @bot.hybrid_command(name="premium", description="Informações sobre a compra do Premium")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def premium(ctx):
-    thing = """Agora ficou ainda mais fácil de ganhar beneficíos no Denji. O Premium é um jeito barato, rápido, e fácil de ostentar para os pobres.
+    if Path(f"profile/{ctx.author.id}/premium").exists() is False:
+        thing = """Agora ficou ainda mais fácil de ganhar beneficíos no Denji. O Premium é um jeito barato, rápido, e fácil de ostentar para os pobres.
 Os benefícios incluem:
 - 100K De PadolaCoins
 - O DOBRO de dinheiro no d$daily
@@ -500,8 +724,24 @@ Os benefícios incluem:
 - Perfil diferenciado
 
 O preço estabelecido é de R$2/Semana (50% OFF!!). Para realizar a compra, chame @jocadbz na DM."""
-    await ctx.send(thing)
-    await ctx.send("https://cdn.discordapp.com/attachments/1164700096668114975/1175195963636322334/image0.gif?ex=656a5987&is=6557e487&hm=1e638b6daaa7c3f5661b8356b67eadae6231b7220b6cb25ecd5c0612e98dd514&")
+        await ctx.reply(f"{thing}\nhttps://cdn.discordapp.com/attachments/1164700096668114975/1175195963636322334/image0.gif?ex=656a5987&is=6557e487&hm=1e638b6daaa7c3f5661b8356b67eadae6231b7220b6cb25ecd5c0612e98dd514&")
+    else:
+        newdate1 = dateutil.parser.parse(open(f"profile/{ctx.author.id}/premium/date", 'r+'))
+        newdate1 = newdate1 + relativedelta(days=7)
+        embed = discord.Embed(title="Premium",
+                              colour=0xf5c211)
+
+        embed.set_author(name=f"Bem vindo {ctx.author.display_name}",
+                         icon_url=ctx.author.display_avatar.url)
+
+        embed.add_field(name="Data",
+                        value=f"Seu premium acaba em {newdate1.strftime('%d/%m')}",
+                        inline=True)
+
+        embed.set_footer(text="Denji",
+                         icon_url=bot.user.display_avatar.url)
+
+        await ctx.reply(embed=embed)
 
 
 # Ping
@@ -529,9 +769,9 @@ async def daily(ctx):
 
     if ctx.author in daily_cooldown:
         if 'active' in uwu_array:
-            await ctx.send("opaaa ÚwÚ pewa *cries* w-wá, você já pegou seus Denji Coins diáwios. Espewe m-mais um tempo pawa pegaw nyovamente. *sweats* (Dica UWU: d$comprar)")
+            await ctx.send("opaaa ÚwÚ pewa *cries* w-wá, você já pegou seus PadolaCoins diáwios. Espewe m-mais um tempo pawa pegaw nyovamente. *sweats* (Dica UWU: d$comprar)")
         else:
-            await ctx.send("Opaaa pera lá, você já pegou seus Denji Coins diários. Espere mais um tempo para pegar novamente. (Dica: d$comprar)")
+            await ctx.send("Opaaa pera lá, você já pegou seus PadolaCoins diários. Espere mais um tempo para pegar novamente. (Dica: d$comprar)")
 
     else:
         current_coins = open(f"profile/{ctx.author.id}/coins", "r+").read()
@@ -560,40 +800,36 @@ async def daily(ctx):
 @app_commands.describe(rsuser="O Usuário para verificar o perfil")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 # TODO: Try to find a way of reducing code in this specific command.
-async def profile(ctx, rsuser: discord.Member | None = None):
+async def profile(ctx, rsuser: discord.User | None = None):
     rsuser = rsuser or None
     if rsuser is not None:
         # TODO: Fix the fact that this gets ignored if we throw any letters at it.
         user_sent = rsuser.id
-        if rsuser.nick is not None:
-            nick = rsuser.nick
-        else:
-            nick = rsuser.name
         if bot.get_user(int(user_sent)) is None:
             await ctx.send(f"Tem certeza de que esse user existe?")
             return
     else:
         user_sent = ctx.author.id
-        if ctx.author.nick is not None:
-            nick = ctx.author.nick
-        else:
-            nick = ctx.author.name
-
     checkprofile(user_sent)
 
     if Path(f"profile/{user_sent}/premium").exists() is True:
-        embed = discord.Embed(title=f"Perfil do/a {nick} (👑 Premium)",
-                              description="*Use d$daily e d$roleta para ganhar PadolaCoins!*",
+        embed = discord.Embed(title=f"Perfil do/a {bot.get_user(int(user_sent)).display_name} (👑 Premium)",
+                              description="",
                               colour=0xf5c211)
     else:
-        embed = discord.Embed(title=f"Perfil do/a {nick}",
-                              description="*Use d$daily e d$roleta para ganhar PadolaCoins!*",
+        embed = discord.Embed(title=f"Perfil do/a {bot.get_user(int(user_sent)).display_name}",
+                              description="",
                               colour=0x00b0f4)
     if Path(f"profile/{user_sent}/casado").is_file() is True:
-        user = bot.get_user(int(open(f'profile/{user_sent}/casado', 'r+').read())).display_name
-        embed.set_author(name=f"💍 Casado/a com {user}",
-                         icon_url=bot.get_user(int(open(f"profile/{user_sent}/casado", "r+").read())).display_avatar)
-
+        if bot.get_user(int(open(f'profile/{user_sent}/casado', 'r+').read())) is None:
+            pass
+        else:
+            user = bot.get_user(int(open(f'profile/{user_sent}/casado', 'r+').read())).display_name
+            embed.set_author(name=f"💍 Casado/a com {user}",
+                             icon_url=bot.get_user(int(open(f"profile/{user_sent}/casado", "r+").read())).display_avatar)
+    embed.add_field(name="Sobre Mim",
+                    value=f"""{open(f"profile/{user_sent}/about", "r+").read()}""",
+                    inline=False)
     embed.add_field(name="Padola Coins",
                     value=f"""P£ {humanize.intcomma(open(f"profile/{user_sent}/coins", "r+").read())}""",
                     inline=False)
@@ -1155,80 +1391,84 @@ async def avatar(ctx, user: discord.Member):
     await ctx.send(embed=embed)
 
 
-# Casamento
-# Casar no discord... é mole?
-@bot.hybrid_command(name="casamento", description="Até que a morte os separe!")
-@app_commands.describe(arg1="Escolha se quer se casar ou se divorciar", user="A Pessoa especial")
-@commands.cooldown(1, cooldown_command, commands.BucketType.user)
-async def casamento(ctx, arg1: Literal["casar", "divorciar"], user: discord.Member):
+@bot.hybrid_group(fallback="ajuda")
+async def casamento(ctx: commands.Context) -> None:
+    embed = discord.Embed(title="Casamento",
+                          description="Comandos disponíveis:\n\n- `casar`\n- `divorciar`",
+                          colour=0x00b0f4)
+
+    await ctx.send(embed=embed)
+
+
+@casamento.command(name="casar")
+async def casamento_1(ctx: commands.Context, user: discord.Member) -> None:
     blah = user
     checkprofile(ctx.author.id)
     checkprofile(user.id)
-    if arg1 == "casar":
-        if user.id == 1167643852786638889:
-            await ctx.reply("Olha... eu te vejo só como amigo... me desculpa...")
+    if user.id == 1167643852786638889:
+        await ctx.reply("Olha... eu te vejo só como amigo... me desculpa...")
+    else:
+        if Path(f"profile/{user.id}/casado").is_file() is True:
+            if 'active' in uwu_array:
+                await ctx.send(f"Essa pessoa já está casada *screams* com awguém...")
+            else:
+                await ctx.send(f"Essa pessoa já está casada com alguém...")
         else:
-            if Path(f"profile/{user.id}/casado").is_file() is True:
+            if Path(f"profile/{ctx.author.id}/casado").is_file() is True:
                 if 'active' in uwu_array:
-                    await ctx.send(f"Essa pessoa já está casada *screams* com awguém...")
+                    await ctx.send(f"Você já é casado!!11")
                 else:
-                    await ctx.send(f"Essa pessoa já está casada com alguém...")
+                    await ctx.send(f"Você já é casado!")
+                other = bot.get_user(int(open(f"profile/{ctx.author.id}/casado", "r+").read()))
+                await other.send(f"Não é querendo ser fofoqueiro... mais o {ctx.author.display_name} tentou se casar com outra pessoa... 👀👀👀")
             else:
-                if Path(f"profile/{ctx.author.id}/casado").is_file() is True:
+                if ctx.author in depression:
                     if 'active' in uwu_array:
-                        await ctx.send(f"Você já é casado!!11")
+                        await ctx.send(f"Você está em depwessão?!! Espewe m-mais um tempo pawa se casaw...")
                     else:
-                        await ctx.send(f"Você já é casado!")
-                    other = bot.get_user(int(open(f"profile/{ctx.author.id}/casado", "r+").read()))
-                    await other.send(f"Não é querendo ser fofoqueiro... mais o {ctx.author.display_name} tentou se casar com outra pessoa... 👀👀👀")
+                        await ctx.send(f"Você está em depressão! Espere mais um tempo para se casar...")
+                if 'active' in uwu_array:
+                    aposta_message = await ctx.send(f"**Atenção {user.mention}, *screeches* o {ctx.author.mention} gostawia de se c-c-casaw com você. Weaja a essa mensagem com um e-emoji de casamento (💒) pawa concowdaw com a cewimônyia.**")
                 else:
-                    if ctx.author in depression:
-                        if 'active' in uwu_array:
-                            await ctx.send(f"Você está em depwessão?!! Espewe m-mais um tempo pawa se casaw...")
-                        else:
-                            await ctx.send(f"Você está em depressão! Espere mais um tempo para se casar...")
+                    aposta_message = await ctx.send(f"**Atenção {user.mention}, o {ctx.author.mention} gostaria de se casar com você. Reaja a essa mensagem com um emoji de casamento (💒) para concordar com a cerimônia.**")
+                await aposta_message.add_reaction('💒')
+
+                def check(reaction, user):
+                    return user == blah and str(reaction.emoji) == '💒'
+
+                try:
+                    reaction, user = await bot.wait_for('reaction_add', timeout=15.0, check=check)
+                except asyncio.TimeoutError:
                     if 'active' in uwu_array:
-                        aposta_message = await ctx.send(f"**Atenção {user.mention}, *screeches* o {ctx.author.mention} gostawia de se c-c-casaw com você. Weaja a essa mensagem com um e-emoji de casamento (💒) pawa concowdaw com a cewimônyia.**")
+                        await aposta_message.edit(content=f"Casamento cancewado?!?1 {ctx.author.display_name} agowa entwou em depwessão...")
                     else:
-                        aposta_message = await ctx.send(f"**Atenção {user.mention}, o {ctx.author.mention} gostaria de se casar com você. Reaja a essa mensagem com um emoji de casamento (💒) para concordar com a cerimônia.**")
-                    await aposta_message.add_reaction('💒')
+                        await aposta_message.edit(content=f"Casamento cancelado! {ctx.author.display_name} agora entrou em depressão...")
+                    depression.append(ctx.author)
+                    await asyncio.sleep(60)
+                    depression.remove(ctx.author)
+                else:
+                    embed = discord.Embed(title=f"💍 {ctx.author.display_name} agora é casado com {user.display_name}! 💍",
+                                          colour=0x00b0f4)
 
-                    def check(reaction, user):
-                        return user == blah and str(reaction.emoji) == '💒'
+                    embed.set_image(url="https://cdn.discordapp.com/attachments/1164700096668114975/1172541249077653514/image0.gif?ex=6560b122&is=654e3c22&hm=02abfda2588e3a62874ba2c16ea8e579bf5dba86b197bfc2fd36478e8ac6832f&")
 
-                    try:
-                        reaction, user = await bot.wait_for('reaction_add', timeout=15.0, check=check)
-                    except asyncio.TimeoutError:
-                        if 'active' in uwu_array:
-                            await aposta_message.edit(content=f"Casamento cancewado?!?1 {ctx.author.display_name} agowa entwou em depwessão...")
-                        else:
-                            await aposta_message.edit(content=f"Casamento cancelado! {ctx.author.display_name} agora entrou em depressão...")
-                        depression.append(ctx.author)
-                        await asyncio.sleep(60)
-                        depression.remove(ctx.author)
-                    else:
-                        embed = discord.Embed(title=f"💍 {ctx.author.display_name} agora é casado com {user.display_name}! 💍",
-                                              colour=0x00b0f4)
+                    await aposta_message.edit(embed=embed, content="")
+                    with open(f'profile/{user.id}/casado', 'w') as f:
+                        f.write(str(ctx.author.id))
+                    with open(f'profile/{ctx.author.id}/casado', 'w') as f:
+                        f.write(str(user.id))
 
-                        embed.set_image(url="https://cdn.discordapp.com/attachments/1164700096668114975/1172541249077653514/image0.gif?ex=6560b122&is=654e3c22&hm=02abfda2588e3a62874ba2c16ea8e579bf5dba86b197bfc2fd36478e8ac6832f&")
 
-                        await aposta_message.edit(embed=embed, content="")
-                        with open(f'profile/{user.id}/casado', 'w') as f:
-                            f.write(str(ctx.author.id))
-                        with open(f'profile/{ctx.author.id}/casado', 'w') as f:
-                            f.write(str(user.id))
-    elif arg1 == "divorciar":
-        if Path(f"profile/{ctx.author.id}/casado").is_file() is True:
-            other = bot.get_user(int(open(f"profile/{ctx.author.id}/casado", "r+").read()))
-            if user.id == other.id:
-                await other.send(f"O {ctx.author.display_name} se divorciou de você! 💔")
-                os.remove(f"profile/{ctx.author.id}/casado")
-                os.remove(f"profile/{user.id}/casado")
-                await ctx.send(f"Você se divorciou de {other.display_name}... 💔")
-            else:
-                await ctx.send("Você não é casado com essa pessoa.")
-        else:
-            await ctx.send("Você nem é casado!")
+@casamento.command(name="divorciar")
+async def casamento_2(ctx: commands.Context) -> None:
+    if Path(f"profile/{ctx.author.id}/casado").is_file() is True:
+        other = bot.get_user(int(open(f"profile/{ctx.author.id}/casado", "r+").read()))
+        await other.send(f"O {ctx.author.display_name} se divorciou de você! 💔")
+        os.remove(f"profile/{ctx.author.id}/casado")
+        os.remove(f"profile/{other.id}/casado")
+        await ctx.send(f"Você se divorciou de {other.display_name}... 💔")
+    else:
+        await ctx.send("Você nem é casado!")
 
 
 @bot.hybrid_command(name="rank", description="Veja o Rank de XP ou de PadolaCoins")
@@ -1389,5 +1629,17 @@ async def ppp(ctx):
 {mention_list[1]}
 {mention_list[2]}""")
 
+
+@bot.hybrid_command(name="sobremim", description="Edite seu perfil")
+@app_commands.describe(sobre_mim="O texto que vai estar no seu perfil")
+@commands.cooldown(1, cooldown_command, commands.BucketType.user)
+async def sobremim(ctx, *, sobre_mim: str):
+    checkprofile(ctx.author.id)
+    if len(sobre_mim) > 300:
+        await ctx.reply("Sua descrição é longa demais...", ephemeral=True)
+        return
+    with open(f'profile/{ctx.author.id}/about', 'w') as f:
+        f.write(sobre_mim)
+    await ctx.reply("Seu perfil foi atualizado!", ephemeral=True)
 
 bot.run(open(f"token", "r+").read(), log_level=logging.INFO)
