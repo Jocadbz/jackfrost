@@ -4,3 +4,6 @@ bot-env/
 custom_commands/
 webhook_custom.v
 .gitignore
+*.sublime-project
+*.sublime-workspace
+pyproject.toml
