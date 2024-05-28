@@ -7,3 +7,5 @@ webhook_custom.v
 *.sublime-project
 *.sublime-workspace
 pyproject.toml
+.idea
+poetry.lock
