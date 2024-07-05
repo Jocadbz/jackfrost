@@ -1886,7 +1886,7 @@ async def darpremium(ctx, user: discord.Member):
 @bot.hybrid_group(fallback="ajuda")
 async def nsfw(ctx: commands.Context) -> None:
     embed = discord.Embed(title="NSFW",
-                          description="Comandos disponíveis:\n\n- `hentai`\n- `porn`",
+                          description="Comandos disponíveis:\n\n- `hentai`",
                           colour=0x00b0f4)
 
     await ctx.send(embed=embed)
@@ -1926,40 +1926,6 @@ async def nsfw_1(ctx, *, tag: str | None = None):
                     embed.set_image(url=resultado)
                     await ctx.reply(embed=embed)
                     increase_punheta(ctx.author.id, 1)
-
-            else:
-                await ctx.reply("O Administrador não autorizou o uso desse comando neste canal.")
-                if Path(f"profile/{ctx.author.id}/conquistas/conquista2.toml").exists() is False:
-                    dar_conquistas(ctx.author.id, "2")
-                    await ctx.send("**Conquista obtida:** *Sem fanheta...*")
-    else:
-        await ctx.reply("RIP Comando NSFW - 2023-2023")
-
-
-@nsfw.command(name="porn", description="Pra Garantir a Famosa Fanheta (mas pra pessoas que existem)")
-@app_commands.describe(tag="Tags, separadas por espaços")
-@commands.cooldown(1, cooldown_command, commands.BucketType.user)
-async def nsfw_2(ctx, tag: str | None = None):
-    checkprofile(ctx.author.id)
-    if 1 == 1:
-        async with ctx.typing():
-            tag = tag or None
-            if tag is not None:
-                if 'reze' in tag.lower() and ctx.guild.id == 1187166078305046539:
-                    await ctx.reply("Sem hentai da reze.")
-                    return
-            if Path(f"config_nsfw.toml").exists() is False:
-                with open(f'config_nsfw.toml', 'w') as f:
-                    f.write("channels = []")
-            with open("config_nsfw.toml", mode="r") as fp:
-                config = toml.load(fp)
-            if ctx.channel.id in config["channels"]:
-                posts = await cunnypy.search("real", tag, gatcha=True)
-                if len(posts) == 0:
-                    await ctx.send("Não conseguimos achar nenhum post relacionado com essas tags.")
-                else:
-                    await ctx.send(f"NSFW\n{posts[0].file_url}")
-                increase_punheta(ctx.author.id, 1)
 
             else:
                 await ctx.reply("O Administrador não autorizou o uso desse comando neste canal.")
