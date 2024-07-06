@@ -668,10 +668,9 @@ async def sync(ctx):
 
 @bot.command(hidden=True)
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
-async def say(ctx, arg):
-    arg = arg or None
+async def say(ctx, channel, arg):
     if ctx.author.id == 727194765610713138:
-        channel = bot.get_channel(1187166079060025346)
+        channel = bot.get_channel(channel)
         await channel.send(arg)
     else:
         await ctx.send("Esse comando não existe. Desculpe!")
