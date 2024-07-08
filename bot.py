@@ -235,6 +235,20 @@ def checkprofile(user_sent):
         with open(f'profile/{user_sent}/punhetas', 'w') as f:
             f.write("0")
 
+def checkonlyjack(user_sent):
+    if Path(f"profile/{user_sent}/onlyjack").exists() is False:
+        os.makedirs(f"profile/{user_sent}/onlyjack/")
+        os.makedirs(f"profile/{user_sent}/onlyjack/uploads")
+        os.makedirs(f"profile/{user_sent}/onlyjack/subto")
+        with open(f'profile/{user_sent}/onlyjack/desc', 'w') as f:
+            f.write("Se inscreva!")
+        with open(f'profile/{user_sent}/onlyjack/subs', 'w') as f:
+            f.write("0")
+        with open(f'profile/{user_sent}/onlyjack/price', 'w') as f:
+            f.write("0")
+        with open(f'profile/{user_sent}/onlyjack/uploads/index', 'w') as f:
+            f.write("0")
+
 
 # Set up command tree Sync
 class MyClient(discord.Client):
@@ -513,6 +527,16 @@ async def on_message(message):
                     f.write(experience_new)
         profiles = os.listdir("profile")
         for profile in profiles:
+            checkonlyjack(profile)
+            for item in os.listdir(f"profile/{profile}/onlyjack/subto/"):
+                newdate1 = dateutil.parser.parse(open(f"profile/{profile}/onlyjack/subto/{item}/date", 'r+'))
+                diff = newdate1 - datetime.datetime.now()
+                if diff.days >=30:
+                    shutil.rmtree(f"profile/{profile}/onlyjack/subto/{item}")
+                    await bot.get_user(int(profile)).send(f"Opa, só passando pra avisar que sua assinatura do onlyjack de {bot.get_user(int(item)).name} expirou.")
+                    current_subs = int(open(f"profile/{item}/onlyjack/subs", "r+").read())
+                    with open(f'profile/{item}/onlyjack/subs', 'w') as f:
+                        f.write(str(current_subs - 1))
             if Path(f"profile/{profile}/premium").exists() is False:
                 pass
             else:
@@ -670,7 +694,7 @@ async def sync(ctx):
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def say(ctx, channel, arg):
     if ctx.author.id == 727194765610713138:
-        channel = bot.get_channel(channel)
+        channel = bot.get_channel(int(channel))
         await channel.send(arg)
     else:
         await ctx.send("Esse comando não existe. Desculpe!")
@@ -1462,10 +1486,10 @@ async def adivinhar(ctx, amount: int, number: int):
     else:
         if number == random.choice(possibilities):
             if f"active-{ctx.guild.id}" in uwu_array:
-                await ctx.reply(f"Pawabéns!!11 Você acewtou, e ganhou {humanize.intcomma(amount)}!")
+                await ctx.reply(f"Pawabéns!!11 Você acewtou, e ganhou {humanize.intcomma(amount*10)}!")
             else:
-                await ctx.reply(f"Parabéns! Você acertou, e ganhou {humanize.intcomma(amount)}!")
-            increase_coins(ctx.author.id, amount)
+                await ctx.reply(f"Parabéns! Você acertou, e ganhou {humanize.intcomma(amount*10)}!")
+            increase_coins(ctx.author.id, amount*10)
         else:
             if f"active-{ctx.guild.id}" in uwu_array:
                 await ctx.reply(f"Poxa!!11 Você pewdeu  {humanize.intcomma(amount)}...")
@@ -1793,7 +1817,7 @@ async def rank(ctx, arg1: Literal["coins", "xp", "duelos"] | None = None):
         another_thing = 'ricos'
     elif arg1 == 'xp':
         ranked_arg = 'xp'
-        another_thing = 'experientes'
+        another_thing = 'experientes do servidor'
     elif arg1 == 'duelos':
         ranked_arg = 'duelos'
         another_thing = 'vencedores de duelos'
@@ -1804,7 +1828,7 @@ async def rank(ctx, arg1: Literal["coins", "xp", "duelos"] | None = None):
 
     pages = round(len(os.listdir("profile")) / 5) - 1
     cur_page = 1
-    embed = discord.Embed(title=f"Os mais {another_thing} do servidor:",
+    embed = discord.Embed(title=f"Os mais {another_thing}:",
                           description=rank_command(ranked_arg, cur_page - 1, ctx.guild.id),
                           colour=0x00b0f4)
 
@@ -2157,5 +2181,215 @@ async def subornarship(ctx, porcentagem: int, pessoa: discord.User):
     await ctx.reply("Suborno aceito. *Não conte pra ninguém...*", ephemeral=True)
 
 
-#bot.remove_command('help')
+# Onlyfans
+@bot.hybrid_group(fallback="ajuda")
+async def onlyjack(ctx: commands.Context) -> None:
+    embed = discord.Embed(title="Onlyfans",
+                          description=f"""
+COMANDOS DISPONÍVEIS:
+- d$onlyjack ver <@user>
+Veja a sua página no Onlyjack, ou a de outras pessoas.
+
+- d$onlyjack subscribe [@user]
+Se inscreva na página de alguém
+
+- d$onlyjack consumir
+Consuma o conteúdo das páginas que você assinou!
+
+- d$onlyjack upload [imagem]
+Dê upload de uma Imagem para sua página! (Apenas Imagens são suportadas)
+
+- d$onlyjack preco [1234]
+Decida o preço da sua assinatura! (Todas as {coin_name} vai para você.)
+
+- d$onlyjack description [blah blah blah]
+Coloque sua descrição personalizada!""",
+                          colour=0x00b0f4)
+
+    await ctx.send(embed=embed)
+
+
+@onlyjack.command(name="ver", description="Ver sua página no Onlyjack")
+@app_commands.describe(member="Usuário que você quer ver")
+@commands.cooldown(1, cooldown_command, commands.BucketType.user)
+async def onlyjack_1(ctx, member: discord.Member | None = None):
+    member = member or ctx.author
+    checkonlyjack(member.id)
+    
+    embed = discord.Embed(title=f"Onlyfans do {member.display_name}",
+                          description=open(f"profile/{member.id}/onlyjack/desc", "r+").read(),
+                        colour=0x00b0f4)
+
+    embed.set_author(name="Onlyjack")
+
+    embed.add_field(name="Preço",
+                    value=f"{open(f'profile/{member.id}/onlyjack/price', 'r+').read()} {coin_name}",
+                    inline=True)
+    embed.add_field(name="Número de posts",
+                    value=open(f"profile/{member.id}/onlyjack/uploads/index", "r+").read(),
+                    inline=True)
+    embed.add_field(name="Número de subs",
+                    value=open(f"profile/{member.id}/onlyjack/subs", "r+").read(),
+                    inline=True)
+
+    embed.set_thumbnail(url=member.display_avatar)
+
+    embed.set_footer(text=bot_name,
+                     icon_url=bot.user.display_avatar)
+
+    await ctx.send(embed=embed)
+
+
+@onlyjack.command(name="subscribe", description="Se inscrever em uma página no Onlyjack")
+@app_commands.describe(member="Usuário que você quer se inscrever")
+@commands.cooldown(1, cooldown_command, commands.BucketType.user)
+async def onlyjack_2(ctx, member: discord.Member):
+    checkonlyjack(member.id)
+    checkonlyjack(ctx.author.id)
+    amount = int(open(f"profile/{member.id}/onlyjack/price", "r+").read())
+    if Path(f"profile/{ctx.author.id}/onlyjack/subto/{member.id}").exists() is True:
+        await ctx.reply("Você já é inscrito nessa página!")
+    else:
+        if amount > int(open(f"profile/{ctx.author.id}/coins", "r+").read()):
+            await ctx.send("Você não tem fundos o suficiente pra completar essa transação. (Dica: d$comprar)")
+        else:
+            decrease_coins(ctx.author.id, amount)
+            increase_coins(member.id, amount)
+            os.makedirs(f"profile/{ctx.author.id}/onlyjack/subto/{member.id}")
+            current_date = datetime.date.today()
+            with open(f'profile/{ctx.author.id}/onlyjack/subto/{member.id}/date', 'w') as f:
+                f.write(current_date.isoformat())
+            current_subs = int(open(f"profile/{member.id}/onlyjack/subs", "r+").read())
+            with open(f'profile/{member.id}/onlyjack/subs', 'w') as f:
+                f.write(str(current_subs + 1))
+            newdate1 = dateutil.parser.parse(open(f"profile/{ctx.author.id}/onlyjack/subto/{member.id}/date", 'r+'))
+            newdate1 = newdate1 + relativedelta(days=30)
+            await ctx.reply(f"Parabéns!, Você se increveu no Onlyjack de {member.display_name}! Sua assinatura vence em `{newdate1.strftime('%d/%m')}`", ephemeral=True)
+            await member.send("Alguém se inscreveu no seu Onlyjack!")
+
+
+@onlyjack.command(name="upload", description="Mande conteudo para sua página. (Apenas imagens serão suportadas.)")
+@commands.cooldown(1, cooldown_command, commands.BucketType.user)
+async def onlyjack_3(ctx, attachment: discord.Attachment):
+    checkonlyjack(ctx.author.id)
+    if attachment.filename.endswith(('.png','.gif','.jpg', '.jpeg')) == False:
+        await ctx.reply("O arquivo que você mandou não é um tipo reconhecido pelo discord. (Tipos suportados: png, gif, jpg, jpeg)")
+    else:
+        current_uploads = int(open(f"profile/{ctx.author.id}/onlyjack/uploads/index", "r+").read())
+        with open(f'profile/{ctx.author.id}/onlyjack/uploads/image_{str(current_uploads + 1)}', 'w') as f:
+            f.write(attachment.url)
+        with open(f'profile/{ctx.author.id}/onlyjack/uploads/index', 'w') as f:
+            f.write(str(current_uploads + 1))
+        await ctx.reply(f"Você fez upload do arquivo {attachment.filename}!")
+
+
+@onlyjack.command(name="consumir", description="Consuma conteudo dos criadores aos quais você se inscreveu!")
+@commands.cooldown(1, cooldown_command, commands.BucketType.user)
+async def onlyjack_4(ctx):
+    checkonlyjack(ctx.author.id)
+    subbed = os.listdir(f"profile/{ctx.author.id}/onlyjack/subto/")
+    if len(subbed) == 0:
+        await ctx.send("Você não se inscreveu em nenhuma página...")
+    else:
+        idx = 0
+        text = "Páginas inscritas: (Responda com o número da pagina para selecionar)"
+        for item in os.listdir(f"profile/{ctx.author.id}/onlyjack/subto/"):
+            idx = idx + 1
+            text = text + f"\n{idx} - {bot.get_user(int(item)).name}"
+
+
+        embed = discord.Embed(title="Páginas inscritas",
+                              description=text)
+
+        await ctx.send(embed=embed)
+
+        def sus(m):
+            return m.author == ctx.author
+
+        try:
+            msg1 = await bot.wait_for('message', check=sus)
+        except asyncio.TimeoutError:
+            await ctx.send('Visualização cancelada. Tente novamente.')
+        else:
+            msg1 = int(msg1.content) - 1
+            posts_index = int(open(f"profile/{subbed[msg1]}/onlyjack/uploads/index", "r+").read())
+            if posts_index == 0:
+                await ctx.send("Esse usuário não tem nenhum post...")
+            else:
+                current_index = 1
+                embed = discord.Embed(title=f"{bot.get_user(int(subbed[msg1]))} posts")
+
+                embed.set_image(url=open(f"profile/{subbed[msg1]}/onlyjack/uploads/image_1", "r+").read())
+                embed.set_author(name=f"Página 1/{posts_index}:")
+
+                message = await ctx.send(embed=embed)
+                message_id = message.id
+                # getting the message object for editing and reacting
+
+                await message.add_reaction("◀️")
+                await message.add_reaction("▶️")
+
+                def amogus(reaction, user):
+                    return user == ctx.author and str(reaction.emoji) in ["◀️", "▶️"]
+                    # This makes sure nobody except the command sender can interact with the "menu"
+
+                while True:
+                    try:
+                        reaction, user = await bot.wait_for("reaction_add", timeout=15, check=amogus)
+                        # waiting for a reaction to be added - times out after x seconds, 60 in this
+                        # example
+
+                        if str(reaction.emoji) == "▶️" and current_index != posts_index:
+                            current_index = current_index + 1
+                            embed = discord.Embed(title=f"{bot.get_user(int(subbed[msg1]))} posts")
+
+                            embed.set_image(url=open(f"profile/{subbed[msg1]}/onlyjack/uploads/image_{current_index}", "r+").read())
+
+                            embed.set_author(name=f"Página {current_index}/{posts_index}:")
+                            await message.edit(embed=embed)
+                            await message.remove_reaction(reaction, user)
+
+                        elif str(reaction.emoji) == "◀️" and current_index > 1:
+                            current_index = current_index - 1
+                            embed = discord.Embed(title=f"{bot.get_user(int(subbed[msg1]))} posts")
+
+                            embed.set_image(url=open(f"profile/{subbed[msg1]}/onlyjack/uploads/image_{current_index}", "r+").read())
+
+                            embed.set_author(name=f"Página {current_index}/{posts_index}:")
+                            await message.edit(embed=embed)
+                            await message.remove_reaction(reaction, user)
+
+                        else:
+                            await message.remove_reaction(reaction, user)
+                            # removes reactions if the user tries to go forward on the last page or
+                            # backwards on the first page
+                    except asyncio.TimeoutError:
+                        await message.delete()
+                        break
+                        # ending the loop if user doesn't react after x seconds
+
+
+@onlyjack.command(name="preco", description="Configure o preço da sua página!")
+@commands.cooldown(1, cooldown_command, commands.BucketType.user)
+async def onlyjack_5(ctx, number: int):
+    checkonlyjack(ctx.author.id)
+    with open(f'profile/{ctx.author.id}/onlyjack/price', 'w') as f:
+        f.write(str(number))
+    await ctx.reply(f"O preço da sua assinatura foi alterada para {number} {coin_name}!")
+
+@onlyjack.command(name="description", description="Configure a descrição da sua página!")
+@commands.cooldown(1, cooldown_command, commands.BucketType.user)
+async def onlyjack_6(ctx, *, desc: str):
+    checkonlyjack(ctx.author.id)
+    with open(f'profile/{ctx.author.id}/onlyjack/desc', 'w') as f:
+        f.write(str(desc))
+    await ctx.reply(f"Sua descrição foi alterada para '{desc}'")
+
+
+
+    
+
+
+
+# bot.remove_command('help')
 bot.run(open(sys.argv[1], "r+").read(), log_level=logging.INFO)
