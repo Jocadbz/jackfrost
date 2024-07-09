@@ -374,6 +374,7 @@ async def on_ready():
 
 
 def setup_experience(message):
+    checkprofile(message.author.id)
     if Path(f"profile/{message.author.id}/experience-{message.guild.id}").exists() is False:
         with open(f'profile/{message.author.id}/experience-{message.guild.id}', 'w') as f:
             f.write("0")
@@ -1939,16 +1940,17 @@ async def nsfw_1(ctx, *, tag: str | None = None):
                     result_random = r34Py.random_post()
                 if result_random is list:
                     await ctx.reply("Não conseguimos achar nenhum post relacionado com essas tags.")
-                elif result_random.image == '':
-                    resultado = result_random.video
-                    await ctx.reply(f"NSFW\n{resultado}")
-                    increase_punheta(ctx.author.id, 1)
                 else:
-                    resultado = result_random.image
-                    embed = discord.Embed(title="NSFW")
-                    embed.set_image(url=resultado)
-                    await ctx.reply(embed=embed)
-                    increase_punheta(ctx.author.id, 1)
+                    if result_random.image == '':
+                        resultado = result_random.video
+                        await ctx.reply(f"NSFW\n{resultado}")
+                        increase_punheta(ctx.author.id, 1)
+                    else:
+                        resultado = result_random.image
+                        embed = discord.Embed(title="NSFW")
+                        embed.set_image(url=resultado)
+                        await ctx.reply(embed=embed)
+                        increase_punheta(ctx.author.id, 1)
 
             else:
                 await ctx.reply("O Administrador não autorizou o uso desse comando neste canal.")
@@ -2376,6 +2378,7 @@ async def onlyjack_5(ctx, number: int):
     with open(f'profile/{ctx.author.id}/onlyjack/price', 'w') as f:
         f.write(str(number))
     await ctx.reply(f"O preço da sua assinatura foi alterada para {number} {coin_name}!")
+
 
 @onlyjack.command(name="description", description="Configure a descrição da sua página!")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
