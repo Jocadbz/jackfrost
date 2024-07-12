@@ -1201,7 +1201,7 @@ async def profile(ctx, rsuser: discord.User | None = None):
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def sobremim(ctx, *, sobre_mim: str):
     checkprofile(ctx.author.id)
-    if len(sobre_mim) > 300:
+    if len(sobre_mim) > 1024:
         await ctx.reply("Sua descrição é longa demais...", ephemeral=True)
         return
     with open(f'profile/{ctx.author.id}/about', 'w') as f:
