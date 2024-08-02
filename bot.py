@@ -25,6 +25,7 @@ import cowsay
 import sys
 from rule34Py import rule34Py
 import cunnypy
+from duckduckgo_search import AsyncDDGS
 
 
 r34Py = rule34Py()
@@ -2224,7 +2225,7 @@ Coloque sua descrição personalizada!""",
 async def onlyjack_1(ctx, member: discord.Member | None = None):
     member = member or ctx.author
     checkonlyjack(member.id)
-    
+
     embed = discord.Embed(title=f"Onlyfans do {member.display_name}",
                           description=open(f"profile/{member.id}/onlyjack/desc", "r+").read(),
                         colour=0x00b0f4)
@@ -2476,8 +2477,68 @@ async def onlyjack_6(ctx, *, desc: str):
     await ctx.reply(f"Sua descrição foi alterada para '{desc}'")
 
 
+@bot.hybrid_command(name="images", description="Procure por imagens!")
+@app_commands.describe(sobre_mim="Sua busca")
+@commands.cooldown(1, cooldown_command, commands.BucketType.user)
+async def images(ctx, *, sobre_mim: str):
+    index = 0
+    results = await AsyncDDGS().aimages(sobre_mim, safesearch='on', max_results=20)
 
-    
+    embed = discord.Embed(title=sobre_mim,
+                          description=results[index]['title'],
+                          colour=0x00b0f4)
+
+    embed.set_image(url=results[index]['image'])
+    message = await ctx.send(embed=embed)
+    await message.add_reaction("◀️")
+    await message.add_reaction("▶️")
+    def amogus(reaction, user):
+        return user == ctx.author and str(reaction.emoji) in ["◀️", "▶️"]
+        # This makes sure nobody except the command sender can interact with the "menu"
+
+    while True:
+        try:
+            reaction, user = await bot.wait_for("reaction_add", timeout=15, check=amogus)
+            # waiting for a reaction to be added - times out after x seconds, 60 in this
+            # example
+
+            if str(reaction.emoji) == "▶️" and index < 20:
+                index = index + 1
+                embed = discord.Embed(title=sobre_mim,
+                                    description=results[index]['title'],
+                                    colour=0x00b0f4)
+
+                embed.set_image(url=results[index]['image'])
+                await message.edit(embed=embed)
+                await message.remove_reaction(reaction, user)
+
+            elif str(reaction.emoji) == "◀️" and index > 1:
+                index = index - 1
+                embed = discord.Embed(title=sobre_mim,
+                                    description=results[index]['title'],
+                                    colour=0x00b0f4)
+
+                embed.set_image(url=results[index]['image'])
+                await message.edit(embed=embed)
+                await message.remove_reaction(reaction, user)
+            else:
+                await message.remove_reaction(reaction, user)
+                # removes reactions if the user tries to go forward on the last page or
+                # backwards on the first page
+        except asyncio.TimeoutError:
+            await message.delete()
+            break
+            # ending the loop if user doesn't react after x seconds
+
+
+@bot.hybrid_command(name="jackgpt", description="Fale com o chatgpt!")
+@app_commands.describe(prompt="Seu prompt")
+@commands.cooldown(1, cooldown_command, commands.BucketType.user)
+async def jackgpt(ctx, *, prompt: str):
+    prompt = f"Finja ser um bot do discord chamado Jack Frost, personagem da franquia Persona e Shin megami tensei. Sabendo disso, responda a seguinte pergunta: {prompt}"
+    results = await AsyncDDGS().achat(prompt, model="gpt-3.5")
+    await ctx.reply(f"{results}")
+
 
 
 
