@@ -26,6 +26,8 @@ import sys
 from rule34Py import rule34Py
 import cunnypy
 from duckduckgo_search import AsyncDDGS
+# AHOOOOOO
+import roles
 
 
 r34Py = rule34Py()
@@ -50,6 +52,7 @@ rinha_resposta_cooldown = []
 uwu_array = []
 depression = []
 cris_array = []
+gacha_array = []
 
 # Defining the cooldown.
 cooldown_command = 5
@@ -2539,6 +2542,134 @@ async def jackgpt(ctx, *, prompt: str):
     results = await AsyncDDGS().achat(prompt, model="gpt-3.5")
     await ctx.reply(f"{results}")
 
+
+@bot.hybrid_command(name="gacha", description="Sorteie os cargos do server do R1ck! (Exclusivo para nação AntiCLT)")
+@commands.cooldown(1, cooldown_command, commands.BucketType.user)
+async def gacha(ctx):
+    if ctx.guild.id != 1256346003817369620:
+        await ctx.reply("Esse comando é exclusivo para o servidor Nação AntiCLT, pedimos desculpas pelo inconveniente.")
+        return
+    if ctx.author.id in gacha_array:
+        await ctx.reply("Você já tem uma compra em andamento!")
+        return
+
+    if random.choice(range(1,5)) == 3:
+        is_m = True
+    else:
+        is_m = False
+
+    rarity = random.choice(range(1,100))
+    if rarity >= 1 and rarity <= 50:
+        if is_m:
+            cargo = random.choice(roles.cargos_uma_estrela_m)
+            preco = roles.preco_1m
+        else:
+            cargo = random.choice(roles.cargos_uma_estrela)
+            preco = roles.preco_1
+        cargo_especial = roles.cargo_especial_uma_estrela
+    elif rarity >= 51 and rarity <= 70:
+        if is_m:
+            cargo = random.choice(roles.cargos_duas_estrelas_m)
+            preco = roles.preco_2m
+        else:
+            cargo = random.choice(roles.cargos_duas_estrelas)
+            preco = roles.preco_2
+        cargo_especial = roles.cargo_especial_duas_estrelas
+    elif rarity >= 71 and rarity <= 80:
+        if is_m:
+            cargo = random.choice(roles.cargos_tres_estrelas_m)
+            preco = roles.preco_3m
+        else:
+            cargo = random.choice(roles.cargos_tres_estrelas)
+            preco = roles.preco_3
+        cargo_especial = roles.cargo_especial_tres_estrelas
+    elif rarity >= 81 and rarity <= 87:
+        if is_m:
+            cargo = random.choice(roles.cargos_quatro_estrelas_m)
+            preco = roles.preco_4m
+        else:
+            cargo = random.choice(roles.cargos_quatro_estrelas)
+            preco = roles.preco_4
+        cargo_especial = roles.cargo_especial_quatro_estrelas
+    elif rarity >= 88 and rarity <= 92:
+        if is_m:
+            cargo = random.choice(roles.cargos_cinco_estrelas_m)
+            preco = roles.preco_5m
+        else:
+            cargo = random.choice(roles.cargos_cinco_estrelas)
+            preco = roles.preco_5
+        cargo_especial = roles.cargo_especial_cinco_estrelas
+    elif rarity >= 93 and rarity <= 96:
+        if is_m:
+            cargo = random.choice(roles.cargos_seis_estrelas_m)
+            preco = roles.preco_6m
+        else:
+            cargo = random.choice(roles.cargos_seis_estrelas)
+            preco = roles.preco_6
+        cargo_especial = roles.cargo_especial_seis_estrelas
+    elif rarity >= 97 and rarity <= 100:
+        if is_m:
+            cargo = random.choice(roles.cargos_sete_estrelas_m)
+            preco = roles.preco_7m
+        else:
+            cargo = random.choice(roles.cargos_sete_estrelas)
+            preco = roles.preco_7
+        cargo_especial = roles.cargo_especial_sete_estrelas
+    else:
+        cargo = ""
+        preco = ""
+        cargo_especial = ""
+
+    the_role = { "is_m": is_m, "preco": preco, "cargo": cargo, "cargo_especial": cargo_especial}
+
+    if the_role["is_m"] is True:
+        message = f"""**JACKPOT! JACKPOT!**
+Você ganhou o cargo **mutado** {the_role['cargo']['nome']} de raridade {the_role['cargo_especial']['nome']}!
+Este cargo custa {the_role['preco']}! Reaja a mensagem abaixo para obter este cargo."""
+    else:
+        message = f"""Você ganhou o cargo {the_role['cargo']['nome']} de raridade {the_role['cargo_especial']['nome']}!
+Este cargo custa {the_role['preco']}! Reaja a mensagem abaixo para obter este cargo."""
+
+    message = await ctx.reply(message)
+    await message.add_reaction("🧐")
+    gacha_array.append(ctx.author.id)
+    def amogus(reaction, user):
+        return user == ctx.author and str(reaction.emoji) in ["🧐"]
+        # This makes sure nobody except the command sender can interact with the "menu"
+
+    while True:
+        try:
+            reaction, user = await bot.wait_for("reaction_add", timeout=10, check=amogus)
+            # waiting for a reaction to be added - times out after x seconds, 60 in this
+            # example
+
+            if str(reaction.emoji) == "🧐":
+                gacha_array.remove(ctx.author.id)
+                if int(open(f"profile/{ctx.author.id}/coins", "r+").read()) < the_role['preco']:
+                    await ctx.send("Você não tem os recursos necessarios para comprar este cargo. Compra cancelada.")
+                    return
+                else:
+                    if type(the_role['cargo_especial']['ID']) is None or type(the_role['cargo']['ID']) is None:
+                        await ctx.send(f"Tem algo bem errado com esse cargo {the_role['cargo']['nome']} ou esse cargo: {the_role['cargo_especial']['ID']}...")
+                        return
+                    if ctx.guild.get_role(the_role['cargo']['ID']) in ctx.author.roles:
+                        pass
+                    else:
+                        await ctx.author.add_roles(ctx.guild.get_role(the_role['cargo']['ID']))
+                    if ctx.guild.get_role(the_role['cargo_especial']['ID']) in ctx.author.roles:
+                        pass
+                    else:
+                        decrease_coins(ctx.author.id, the_role['preco'])
+                        await ctx.author.add_roles(ctx.guild.get_role(the_role['cargo_especial']['ID']))
+                    await ctx.send(f"Você ganhou o cargo {the_role['cargo']['nome']}")
+
+
+                    break
+
+        except asyncio.TimeoutError:
+            gacha_array.remove(ctx.author.id)
+            break
+            # ending the loop if user doesn't react after x seconds
 
 
 
