@@ -510,7 +510,7 @@ async def on_message(message):
             if "active" in uwu_array:
                 jokes = ["PEITOS?!?! aONDE?!?1 *sweats* PEITOS PEITOS PEITOS PEITOS AAAAAAAAAAAAAA", "São >w< tão macios... quewia pegaw em uns peitos...", "EU QUEWO PEITOOOOOOOOOOS", "Sou o maiow fã de peitos do mundo", "E-Eu nwao ligo maisw pwo mundo, só UWU q-qewo peitos"]
             else:
-                jokes = ["PEITOS???? AONDE?????? PEITOS PEITOS PEITOS PEITOS AAAAAAAAAAAAAA", "São tão macios... queria pegar em uns peitos...", "EU QUERO PEITOOOOOOOOOOS", "Sou o maior fã de peitos do mundo", "Eu não ligo mais pro mundo, só quero peitos"]
+                jokes = ["PEITOS???? AONDE?????? PEITOS PEITOS PEITOS PEITOS AAAAAAAAAAAAAA", "São tão macios... queria pegar em uns peitos...", "EU QUERO PEITOOOOOOOOOOS", "Sou o maior fã de peitos do mundo", "Eu não ligo mais pro mundo, só quero peitos", "PEITOOOOOSSSSS QUERO PEITOS NECESSITO DE PEITÕES", "Peito grande enche a mão de um homem, já peito pequeno enche o coração de um homem", "PEITOS, PEITINHOS, PEITÕES"]
             await message.channel.send(random.choice(jokes))
 
         if len(message.content) < 5:
@@ -929,12 +929,13 @@ async def sobre(ctx):
 @bot.hybrid_command(name="uwu", description="Ative o modo UWU")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def uwu(ctx):
-    if f"active-{ctx.guild.id}" in uwu_array:
-        uwu_array.remove(f"active-{ctx.guild.id}")
-        await ctx.reply("Modo UWU desativado!")
-    else:
-        uwu_array.append(f"active-{ctx.guild.id}")
-        await ctx.reply("Modo UWU Ativado!")
+    await ctx.reply("Esse comando não existe.")
+#    if f"active-{ctx.guild.id}" in uwu_array:
+#        uwu_array.remove(f"active-{ctx.guild.id}")
+#        await ctx.reply("Modo UWU desativado!")
+#    else:
+#        uwu_array.append(f"active-{ctx.guild.id}")
+#        await ctx.reply("Modo UWU Ativado!")
 
 
 # Battle Command
@@ -2538,9 +2539,10 @@ async def images(ctx, *, sobre_mim: str):
 @app_commands.describe(prompt="Seu prompt")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def jackgpt(ctx, *, prompt: str):
-    prompt = f"Finja ser um bot do discord chamado Jack Frost, personagem da franquia Persona e Shin megami tensei. Sabendo disso, responda a seguinte pergunta: {prompt}"
-    results = await AsyncDDGS().achat(prompt, model="gpt-3.5")
-    await ctx.reply(f"{results}")
+    #prompt = f"Finja ser um bot do discord chamado Jack Frost, personagem da franquia Persona e Shin megami tensei. Sabendo disso, responda a seguinte pergunta: {prompt}"
+    #results = await AsyncDDGS().achat(prompt, model="gpt-3.5")
+    #await ctx.reply(f"{results}")
+    await ctx.reply("Pedimos desculpas pelo incoveniente, mas este commando está em manutenção.")
 
 
 @bot.hybrid_command(name="gacha", description="Sorteie os cargos do server do R1ck! (Exclusivo para nação AntiCLT)")
