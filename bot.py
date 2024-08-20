@@ -26,6 +26,8 @@ import sys
 from rule34Py import rule34Py
 import cunnypy
 from duckduckgo_search import AsyncDDGS
+import chess
+import chess.svg
 # AHOOOOOO
 import roles
 
@@ -434,6 +436,9 @@ async def on_message(message):
         setup_experience(message)
         if Path(f"guilds/{message.guild.id}/custom_commands").exists() is False:
             os.makedirs(f"guilds/{message.guild.id}/custom_commands")
+        if message.author.id in banned_users:
+            message.channel.send("You are banned.")
+            return
         with open('config_channels.toml', 'r') as f:
             config = toml.load(f)
         if message.channel.id in config["channels"]:
@@ -2672,6 +2677,129 @@ Este cargo custa {the_role['preco']}! Reaja a mensagem abaixo para obter este ca
             gacha_array.remove(ctx.author.id)
             break
             # ending the loop if user doesn't react after x seconds
+
+
+@bot.hybrid_command(name="chess", description="Desafie os outros para uma partida de xadrez!")
+@app_commands.describe(desafiante="A pessoa que você quer desafiar")
+@commands.cooldown(1, cooldown_command, commands.BucketType.user)
+async def xadrez(ctx, desafiante: discord.Member):
+
+    message = await ctx.send(f"**Atenção {desafiante.mention}, o {ctx.author.mention} quer desafiar você para uma partida de xadrez. Reaja a esta mensagem com um emoji de dedão '👍' em 15 segundos para concordar com a partida.**")
+    await message.add_reaction('👍')
+
+    def check(reaction, user):
+        return user == desafiante and str(reaction.emoji) == '👍'
+    try:
+        reaction, user = await bot.wait_for('reaction_add', timeout=15.0, check=check)
+    except asyncio.TimeoutError:
+        await ctx.send("Partida cancelada.")
+    else:
+        board = chess.Board()
+        boardsvg = chess.svg.board(board)
+        f = open(f"{ctx.author.id}{desafiante.id}.svg", "w")
+        f.write(boardsvg)
+        f.close()
+        os.system(f"convert {ctx.author.id}{desafiante.id}.svg {ctx.author.id}{desafiante.id}.png")
+        os.remove(f"{ctx.author.id}{desafiante.id}.svg")
+        file = discord.File(f"{ctx.author.id}{desafiante.id}.png", filename="board.png")
+        await ctx.send(f"Partida: {ctx.author.mention} x {desafiante.mention}\nRegras:\n- Mínimo de 240 segundos para pensar no movimento, caso excedido a partida será cancelada.\n- Você deverá colocar os movimentos conforme o protocolo UCI (Exemplo, `a2a4`, o peão na casa A2 irá se mover para a casa A4.\n\n É a vez de {ctx.author.name}", file=file)
+
+        while True:
+            def sus(m):
+                return m.author == ctx.author
+            while True:
+                try:
+                    msg2 = await bot.wait_for('message',timeout=240, check=sus)
+                except asyncio.TimeoutError:
+                    await ctx.send(f'Partida cancelada, {desafiante.mention} vence.')
+                    os.remove(f"{ctx.author.id}{desafiante.id}.png")
+                    return
+                else:
+                    if msg2.content == "desistir":
+                        await ctx.send(f"O participante desiste. {desafiante.mention} vence.")
+                        os.remove(f"{ctx.author.id}{desafiante.id}.png")
+                        return
+                    try:
+                        move = chess.Move.from_uci(msg2.content)
+                    except Exception:
+                        await ctx.send("Movimento inválido, tente novamente.")
+                    else:
+                        if move not in board.legal_moves:
+                            await ctx.send("Movimento inválido, tente novamente.")
+                        else:
+                            break
+
+            board.push(move)
+            boardsvg = chess.svg.board(board)
+            f = open(f"{ctx.author.id}{desafiante.id}.svg", "w")
+            f.write(boardsvg)
+            f.close()
+            os.system(f"convert {ctx.author.id}{desafiante.id}.svg {ctx.author.id}{desafiante.id}.png")
+            os.remove(f"{ctx.author.id}{desafiante.id}.svg")
+            file = discord.File(f"{ctx.author.id}{desafiante.id}.png", filename="board.png")
+            if board.is_checkmate():
+                await ctx.send(f"O ganhador é {ctx.author.mention}!", file=file)
+                os.remove(f"{ctx.author.id}{desafiante.id}.png")
+                return
+            elif board.is_stalemate():
+                await ctx.send(f"É um empate.", file=file)
+                os.remove(f"{ctx.author.id}{desafiante.id}.png")
+                return
+            elif board.is_insufficient_material():
+                await ctx.send(f"Não há mais peças suficientes. É um empate.", file=file)
+                os.remove(f"{ctx.author.id}{desafiante.id}.png")
+                return
+            else:
+                await ctx.send(f"É a vez de {desafiante.mention}", file=file)
+
+            def amogus(m):
+                return m.author == desafiante
+            while True:
+                try:
+                    msg2 = await bot.wait_for('message',timeout=240, check=amogus)
+                except asyncio.TimeoutError:
+                    await ctx.send(f'Partida cancelada, {ctx.author.mention} vence.')
+                    os.remove(f"{ctx.author.id}{desafiante.id}.png")
+                    return
+                else:
+                    if msg2.content == "desistir":
+                        await ctx.send(f"O participante desiste. {ctx.author.mention} vence.")
+                        os.remove(f"{ctx.author.id}{desafiante.id}.png")
+                        return
+                    try:
+                        move = chess.Move.from_uci(msg2.content)
+                    except Exception:
+                        await ctx.send("Movimento inválido, tente novamente.")
+                    else:
+                        if move not in board.legal_moves:
+                            await ctx.send("Movimento inválido, tente novamente.")
+                        else:
+                            break
+
+            board.push(move)
+            boardsvg = chess.svg.board(board)
+            f = open(f"{ctx.author.id}{desafiante.id}.svg", "w")
+            f.write(boardsvg)
+            f.close()
+            os.system(f"convert {ctx.author.id}{desafiante.id}.svg {ctx.author.id}{desafiante.id}.png")
+            os.remove(f"{ctx.author.id}{desafiante.id}.svg")
+            file = discord.File(f"{ctx.author.id}{desafiante.id}.png", filename="board.png")
+            if board.is_checkmate():
+                await ctx.send(f"O ganhador é {desafiante.mention}!", file=file)
+                os.remove(f"{ctx.author.id}{desafiante.id}.png")
+                return
+            elif board.is_stalemate():
+                await ctx.send(f"É um empate.", file=file)
+                os.remove(f"{ctx.author.id}{desafiante.id}.png")
+                return
+            elif board.is_insufficient_material():
+                await ctx.send(f"Não há mais peças suficientes. É um empate.", file=file)
+                os.remove(f"{ctx.author.id}{desafiante.id}.png")
+                return
+            else:
+                await ctx.send(f"É a vez de {ctx.author.mention}", file=file)
+
+
 
 
 
