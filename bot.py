@@ -919,6 +919,16 @@ async def mensagemdeboasvindas(ctx: discord.ApplicationContext):
 @bot.hybrid_command(name="sobre", description="Dá uma descrição do bot")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def sobre(ctx):
+
+    class ErrorReport(BaseModal, title="Reportar um erro"):
+        tag_content = discord.ui.TextInput(label="Descreva seu erro aqui", placeholder="Meu erro aconteceu blah blah blah...", min_length=1, max_length=1024, style=discord.TextStyle.long)
+
+        async def on_submit(self, interaction: discord.Interaction) -> None:
+            idk = bot.get_user(int("727194765610713138"))
+            await idk.send(f"**Erro reportado por {ctx.author.global_name} (ID: {ctx.author.id})**\n\nErro reportado: {self.tag_content.value}")
+            await interaction.response.send_message(f"Obrigado pela sua colaboração.", ephemeral=True)
+            await super().on_submit(interaction)
+
     list = os.listdir("profile/")
     the_user = bot.get_user(int("727194765610713138"))
     embed = discord.Embed(title=f'{bot_name}', colour=0x00b0f4)
@@ -928,7 +938,16 @@ async def sobre(ctx):
     embed.add_field(name="Perfis disponíveis:", value=f"{len(list)} perfis", inline=False)
     embed.set_footer(text="Feito por Jocadbz",
                      icon_url=the_user.display_avatar)
-    await ctx.send(embed=embed)
+
+    view = BaseView(ctx.author)
+    view.add_item(discord.ui.Button(label="Reportar um erro", style=discord.ButtonStyle.gray, emoji='✍️'))
+
+    async def callback(interaction: discord.Interaction):
+        await interaction.response.send_modal(ErrorReport())
+
+    view.children[0].callback = callback
+    view.message = await ctx.reply(embed=embed, view=view)
+
 
 
 @bot.hybrid_command(name="uwu", description="Ative o modo UWU")
