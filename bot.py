@@ -245,11 +245,15 @@ def checkprofile(user_sent):
 def checkonlyjack(user_sent):
     if Path(f"profile/{user_sent}/onlyjack").exists() is False:
         os.makedirs(f"profile/{user_sent}/onlyjack/")
+    if Path(f"profile/{user_sent}/onlyjack/subto").exists() is False:
         os.makedirs(f"profile/{user_sent}/onlyjack/subto")
+    if Path(f"profile/{user_sent}/onlyjack/desc").exists() is False:
         with open(f'profile/{user_sent}/onlyjack/desc', 'w') as f:
             f.write("Se inscreva!")
+    if Path(f"profile/{user_sent}/onlyjack/subs").exists() is False:
         with open(f'profile/{user_sent}/onlyjack/subs', 'w') as f:
             f.write("0")
+    if Path(f"profile/{user_sent}/onlyjack/price").exists() is False:
         with open(f'profile/{user_sent}/onlyjack/price', 'w') as f:
             f.write("0")
     if Path(f"profile/{user_sent}/onlyjack/uploads").exists() is False:
@@ -504,19 +508,6 @@ async def on_message(message):
             if Path(f"profile/{message.author.id}/conquistas/conquista6.toml").exists() is False:
                 dar_conquistas(message.author.id, "6")
                 await message.channel.send("**Conquista obtida:** *Suro*")
-        if "calcinha" in message.content.lower():
-            if "active" in uwu_array:
-                jokes = "Quewia tanto OwO tew uma..."
-            else:
-                jokes = "Queria tanto ter uma..."
-            await message.channel.send(jokes)
-
-        if "peitos" in message.content.lower():
-            if "active" in uwu_array:
-                jokes = ["PEITOS?!?! aONDE?!?1 *sweats* PEITOS PEITOS PEITOS PEITOS AAAAAAAAAAAAAA", "São >w< tão macios... quewia pegaw em uns peitos...", "EU QUEWO PEITOOOOOOOOOOS", "Sou o maiow fã de peitos do mundo", "E-Eu nwao ligo maisw pwo mundo, só UWU q-qewo peitos"]
-            else:
-                jokes = ["PEITOS???? AONDE?????? PEITOS PEITOS PEITOS PEITOS AAAAAAAAAAAAAA", "São tão macios... queria pegar em uns peitos...", "EU QUERO PEITOOOOOOOOOOS", "Sou o maior fã de peitos do mundo", "Eu não ligo mais pro mundo, só quero peitos", "PEITOOOOOSSSSS QUERO PEITOS NECESSITO DE PEITÕES", "Peito grande enche a mão de um homem, já peito pequeno enche o coração de um homem", "PEITOS, PEITINHOS, PEITÕES"]
-            await message.channel.send(random.choice(jokes))
 
         if len(message.content) < 5:
             msg_xp = 0
@@ -1957,44 +1948,47 @@ async def nsfw(ctx: commands.Context) -> None:
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def nsfw_1(ctx, *, tag: str | None = None):
     checkprofile(ctx.author.id)
-    if 1 == 1:
-        async with ctx.typing():
-            tag = tag or None
-            if tag is not None:
-                if 'reze' in tag.lower() and ctx.guild.id == 1187166078305046539:
-                    await ctx.reply("Sem hentai da reze.")
-                    return
-            if Path(f"config_nsfw.toml").exists() is False:
-                with open(f'config_nsfw.toml', 'w') as f:
-                    f.write("channels = []")
-            with open("config_nsfw.toml", mode="r") as fp:
-                config = toml.load(fp)
-            if ctx.channel.id in config["channels"]:
-                if tag is not None:
-                    result_random = r34Py.random_post(tag.split(' '))
-                else:
-                    result_random = r34Py.random_post()
-                if result_random is list:
-                    await ctx.reply("Não conseguimos achar nenhum post relacionado com essas tags.")
-                else:
-                    if result_random.image == '':
-                        resultado = result_random.video
-                        await ctx.reply(f"NSFW\n{resultado}")
-                        increase_punheta(ctx.author.id, 1)
-                    else:
-                        resultado = result_random.image
-                        embed = discord.Embed(title="NSFW")
-                        embed.set_image(url=resultado)
-                        await ctx.reply(embed=embed)
-                        increase_punheta(ctx.author.id, 1)
+    async with ctx.typing():
+        tag = tag or None
+        if tag is not None:
+            if 'reze' in tag.lower() and ctx.guild.id == 1187166078305046539:
+                await ctx.reply("Sem hentai da reze.")
+                return
+        if Path(f"config_nsfw.toml").exists() is False:
+            with open(f'config_nsfw.toml', 'w') as f:
+                f.write("channels = []")
+        with open("config_nsfw.toml", mode="r") as fp:
+            config = toml.load(fp)
+        if isinstance(ctx.channel, discord.DMChannel):
+            pass
+        elif ctx.channel.id not in config["channels"]:
+            await ctx.reply("O Administrador não autorizou o uso desse comando neste canal.")
+            if Path(f"profile/{ctx.author.id}/conquistas/conquista2.toml").exists() is False:
+                dar_conquistas(ctx.author.id, "2")
+                await ctx.send("**Conquista obtida:** *Sem fanheta...*")
+            return
 
+        if tag is not None:
+            result_random = r34Py.random_post(tag.split(' '))
+        else:
+            result_random = r34Py.random_post()
+        if result_random is list:
+            await ctx.reply("Não conseguimos achar nenhum post relacionado com essas tags.")
+        else:
+            if result_random.image == '':
+                resultado = result_random.video
+                await ctx.reply(f"NSFW\n{resultado}")
+                increase_punheta(ctx.author.id, 1)
             else:
-                await ctx.reply("O Administrador não autorizou o uso desse comando neste canal.")
-                if Path(f"profile/{ctx.author.id}/conquistas/conquista2.toml").exists() is False:
-                    dar_conquistas(ctx.author.id, "2")
-                    await ctx.send("**Conquista obtida:** *Sem fanheta...*")
-    else:
-        await ctx.reply("RIP Comando NSFW - 2023-2023")
+                resultado = result_random.image
+                embed = discord.Embed(title="NSFW")
+                embed.set_image(url=resultado)
+                await ctx.reply(embed=embed)
+                increase_punheta(ctx.author.id, 1)
+
+
+
+
 
 
 @bot.hybrid_command(name="ppp", description="Pego, penso e passo")
@@ -2227,19 +2221,14 @@ async def onlyjack(ctx: commands.Context) -> None:
 COMANDOS DISPONÍVEIS:
 - d$onlyjack ver <@user>
 Veja a sua página no Onlyjack, ou a de outras pessoas.
-
 - d$onlyjack subscribe [@user]
 Se inscreva na página de alguém
-
 - d$onlyjack consumir
 Consuma o conteúdo das páginas que você assinou!
-
 - d$onlyjack upload [imagem]
 Dê upload de uma Imagem para sua página! (Apenas Imagens são suportadas)
-
 - d$onlyjack preco [1234]
 Decida o preço da sua assinatura! (Todas as {coin_name} vai para você.)
-
 - d$onlyjack description [blah blah blah]
 Coloque sua descrição personalizada!""",
                           colour=0x00b0f4)
@@ -2306,31 +2295,16 @@ async def onlyjack_2(ctx, member: discord.Member):
             await member.send("Alguém se inscreveu no seu Onlyjack!")
 
 
-@onlyjack.command(name="upload", description="Mande conteudo para sua página.")
+@onlyjack.command(name="upload", description="Mande conteudo para sua página. (Apenas imagens serão suportadas.)")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def onlyjack_3(ctx, attachment: discord.Attachment):
     checkonlyjack(ctx.author.id)
-    if attachment.content_type in ('image/png','image/gif','image/jpg', 'image/jpeg'):
-        current_uploads = int(open(f"profile/{ctx.author.id}/onlyjack/uploads/index", "r+").read())
-        os.makedirs(f"profile/{ctx.author.id}/onlyjack/uploads/image_{str(current_uploads + 1)}")
-        await attachment.save(f"profile/{ctx.author.id}/onlyjack/uploads/image_{str(current_uploads + 1)}/{attachment.filename}")
-        with open(f'profile/{ctx.author.id}/onlyjack/uploads/index', 'w') as f:
-            f.write(str(current_uploads + 1))
-        await ctx.reply(f"Você fez upload do arquivo {attachment.filename}!")
-    elif attachment.filename.endswith('.txt') is True:
-        current_uploads = int(open(f"profile/{ctx.author.id}/onlyjack/uploads/index", "r+").read())
-        content = await attachment.read()
-        with open(f'profile/{ctx.author.id}/onlyjack/uploads/image_{str(current_uploads + 1)}', 'w') as f:
-            f.write(f"text|{str(content, 'utf-8')}")
-        with open(f'profile/{ctx.author.id}/onlyjack/uploads/index', 'w') as f:
-            f.write(str(current_uploads + 1))
-        await ctx.reply(f"Você fez upload do arquivo {attachment.filename}!")
+    if attachment.filename.endswith(('.png','.gif','.jpg', '.jpeg')) == False:
+        await ctx.reply("O arquivo que você mandou não é um tipo reconhecido pelo discord. (Tipos suportados: png, gif, jpg, jpeg)")
     else:
-        # Gentle warning :3
-#        await ctx.send("NÃO É SUPORTADO ESSA PORRA NÃO É SUPORTADA OK????? VAI SE FUDER EU ODEIO O DISCORD ODEIO ESE BOT ODEIO TUDO NESSE CARALHO")
         current_uploads = int(open(f"profile/{ctx.author.id}/onlyjack/uploads/index", "r+").read())
         with open(f'profile/{ctx.author.id}/onlyjack/uploads/image_{str(current_uploads + 1)}', 'w') as f:
-            f.write(f"{attachment.url}")
+            f.write(attachment.url)
         with open(f'profile/{ctx.author.id}/onlyjack/uploads/index', 'w') as f:
             f.write(str(current_uploads + 1))
         await ctx.reply(f"Você fez upload do arquivo {attachment.filename}!")
@@ -2354,7 +2328,7 @@ async def onlyjack_4(ctx):
         embed = discord.Embed(title="Páginas inscritas",
                               description=text)
 
-        delete_after_shit_is_done = await ctx.send(embed=embed)
+        await ctx.send(embed=embed)
 
         def sus(m):
             return m.author == ctx.author
@@ -2364,39 +2338,21 @@ async def onlyjack_4(ctx):
         except asyncio.TimeoutError:
             await ctx.send('Visualização cancelada. Tente novamente.')
         else:
-            delete_after_shit_is_done.delete()
-            try:
-                msg1 = int(msg1.content)
-            except ValueError:
-                await ctx.send("Número não reconhecido. Visualizando primeiro post...")
-                msg1 = 0
-            else:
-                msg1 = int(msg1.content) - 1
+            msg1 = int(msg1.content) - 1
             posts_index = int(open(f"profile/{subbed[msg1]}/onlyjack/uploads/index", "r+").read())
             if posts_index == 0:
                 await ctx.send("Esse usuário não tem nenhum post...")
             else:
                 current_index = 1
-                if os.path.isdir(f"profile/{subbed[msg1]}/onlyjack/uploads/image_{str(current_index)}") is True:
-                    file = discord.File(f"profile/{subbed[msg1]}/onlyjack/uploads/image_{str(current_index)}/{os.listdir(f'profile/{subbed[msg1]}/onlyjack/uploads/image_{str(current_index)}')[0]}")
-                    embed = discord.Embed(title=f"{bot.get_user(int(subbed[msg1]))} posts")
+                embed = discord.Embed(title=f"{bot.get_user(int(subbed[msg1]))} posts")
 
-                    embed.set_image(url=f"attachment://{os.listdir(f'profile/{subbed[msg1]}/onlyjack/uploads/image_{str(current_index)}')[0]}")
-                    embed.set_author(name=f"Página 1/{posts_index}:")
-                    message = await ctx.send(content=None, embed=embed, file=file)
-                elif open(f"profile/{subbed[msg1]}/onlyjack/uploads/image_1", "r+").read().split("|")[0] == "text":
-                    embed = discord.Embed(title=f"{bot.get_user(int(subbed[msg1]))} posts",
-                                          description=open(f"profile/{subbed[msg1]}/onlyjack/uploads/image_1", "r+").read().split("|")[1])
+                embed.set_image(url=open(f"profile/{subbed[msg1]}/onlyjack/uploads/image_1", "r+").read())
+                embed.set_author(name=f"Página 1/{posts_index}:")
 
-                    embed.set_author(name=f"Página 1/{posts_index}:")
-
-                    message = await ctx.send(content=None, embed=embed)
-                else:
-                    message = f"{bot.get_user(int(subbed[msg1]))} posts\n\nPágina 1/{posts_index}:\n{open(f'profile/{subbed[msg1]}/onlyjack/uploads/image_1', 'r+').read().split('|')[0]}"
-                    message = await ctx.send(message)
+                message = await ctx.send(embed=embed)
+                message_id = message.id
                 # getting the message object for editing and reacting
 
-                message_id = message.id
                 await message.add_reaction("◀️")
                 await message.add_reaction("▶️")
 
@@ -2412,70 +2368,23 @@ async def onlyjack_4(ctx):
 
                         if str(reaction.emoji) == "▶️" and current_index != posts_index:
                             current_index = current_index + 1
-                            if os.path.isdir(f"profile/{subbed[msg1]}/onlyjack/uploads/image_{str(current_index)}") is True:
-                                file = discord.File(f"profile/{subbed[msg1]}/onlyjack/uploads/image_{str(current_index)}/{os.listdir(f'profile/{subbed[msg1]}/onlyjack/uploads/image_{str(current_index)}')[0]}")
-                                embed = discord.Embed(title=f"{bot.get_user(int(subbed[msg1]))} posts")
+                            embed = discord.Embed(title=f"{bot.get_user(int(subbed[msg1]))} posts")
 
-                                embed.set_image(url=f"attachment://{os.listdir(f'profile/{subbed[msg1]}/onlyjack/uploads/image_{str(current_index)}')[0]}")
-                                embed.set_author(name=f"Página {current_index}/{posts_index}:")
+                            embed.set_image(url=open(f"profile/{subbed[msg1]}/onlyjack/uploads/image_{current_index}", "r+").read())
 
-                                await message.delete()
-                                message = await ctx.send(content=None, embed=embed, file=file)
-                                message_id = message.id
-                                await message.add_reaction("◀️")
-                                await message.add_reaction("▶️")
-                            elif open(f"profile/{subbed[msg1]}/onlyjack/uploads/image_{current_index}", "r+").read().split("|")[0] == "text":
-                                embed = discord.Embed(title=f"{bot.get_user(int(subbed[msg1]))} posts",
-                                                      description=open(f"profile/{subbed[msg1]}/onlyjack/uploads/image_{current_index}", "r+").read().split("|")[1])
-
-                                embed.set_author(name=f"Página {current_index}/{posts_index}:")
-
-                                await message.delete()
-                                message = await ctx.send(content=None, embed=embed)
-                                message_id = message.id
-                                await message.add_reaction("◀️")
-                                await message.add_reaction("▶️")
-                            else:
-                                message1 = f"""{bot.get_user(int(subbed[msg1]))} posts\n\nPágina {current_index}/{posts_index}:\n{open(f'profile/{subbed[msg1]}/onlyjack/uploads/image_{current_index}', 'r+').read().split('|')[0]}"""
-                                await message.delete()
-                                message = await ctx.send(message1)
-                                message_id = message.id
-                                await message.add_reaction("◀️")
-                                await message.add_reaction("▶️")
+                            embed.set_author(name=f"Página {current_index}/{posts_index}:")
+                            await message.edit(embed=embed)
+                            await message.remove_reaction(reaction, user)
 
                         elif str(reaction.emoji) == "◀️" and current_index > 1:
                             current_index = current_index - 1
-                            if os.path.isdir(f"profile/{subbed[msg1]}/onlyjack/uploads/image_{str(current_index)}") is True:
-                                file = discord.File(f"profile/{subbed[msg1]}/onlyjack/uploads/image_{str(current_index)}/{os.listdir(f'profile/{subbed[msg1]}/onlyjack/uploads/image_{str(current_index)}')[0]}")
-                                embed = discord.Embed(title=f"{bot.get_user(int(subbed[msg1]))} posts")
+                            embed = discord.Embed(title=f"{bot.get_user(int(subbed[msg1]))} posts")
 
-                                embed.set_image(url=f"attachment://{os.listdir(f'profile/{subbed[msg1]}/onlyjack/uploads/image_{str(current_index)}')[0]}")
-                                embed.set_author(name=f"Página {current_index}/{posts_index}:")
+                            embed.set_image(url=open(f"profile/{subbed[msg1]}/onlyjack/uploads/image_{current_index}", "r+").read())
 
-                                await message.delete()
-                                message = await ctx.send(content=None, embed=embed, file=file)
-                                message_id = message.id
-                                await message.add_reaction("◀️")
-                                await message.add_reaction("▶️")
-                            elif open(f"profile/{subbed[msg1]}/onlyjack/uploads/image_{current_index}", "r+").read().split("|")[0] == "text":
-                                embed = discord.Embed(title=f"{bot.get_user(int(subbed[msg1]))} posts",
-                                                    description=open(f"profile/{subbed[msg1]}/onlyjack/uploads/image_{current_index}", "r+").read().split("|")[1])
-
-                                embed.set_author(name=f"Página {current_index}/{posts_index}:")
-
-                                await message.delete()
-                                message = await ctx.send(content=None, embed=embed)
-                                message_id = message.id
-                                await message.add_reaction("◀️")
-                                await message.add_reaction("▶️")
-                            else:
-                                message1 = f"""{bot.get_user(int(subbed[msg1]))} posts\n\nPágina {current_index}/{posts_index}:\n{open(f'profile/{subbed[msg1]}/onlyjack/uploads/image_{current_index}', 'r+').read().split('|')[0]}"""
-                                await message.delete()
-                                message = await ctx.send(message1)
-                                message_id = message.id
-                                await message.add_reaction("◀️")
-                                await message.add_reaction("▶️")
-
+                            embed.set_author(name=f"Página {current_index}/{posts_index}:")
+                            await message.edit(embed=embed)
+                            await message.remove_reaction(reaction, user)
 
                         else:
                             await message.remove_reaction(reaction, user)
@@ -2494,7 +2403,6 @@ async def onlyjack_5(ctx, number: int):
     with open(f'profile/{ctx.author.id}/onlyjack/price', 'w') as f:
         f.write(str(number))
     await ctx.reply(f"O preço da sua assinatura foi alterada para {number} {coin_name}!")
-
 
 @onlyjack.command(name="description", description="Configure a descrição da sua página!")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
