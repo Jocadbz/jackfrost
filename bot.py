@@ -548,18 +548,18 @@ async def on_message(message):
                     current_subs = int(open(f"profile/{item}/onlyjack/subs", "r+").read())
                     with open(f'profile/{item}/onlyjack/subs', 'w') as f:
                         f.write(str(current_subs - 1))
-            for profile in profiles:
-                checkprofile(profile)
-                for item in os.listdir(f"profile/{profile}/emprestimos/feito"):
-                    newdate1 = dateutil.parser.parse(open(f"profile/{profile}/emprestimos/feito/{item}/date", 'r+'))
-                    diff = newdate1 - datetime.datetime.now()
-                    if diff.days >= 30:
-                        decrease_coins(profile, int(open(f'profile/{profile}/emprestimos/feito/{item}/amount', 'r+')))
-                        increase_coins(open(f"profile/{profile}/emprestimos/feito/{item}/credor", 'r+'), int(open(f'profile/{profile}/emprestimos/feito/{item}/amount', 'r+')))
-                        await bot.get_user(int(profile)).send(
-                            f"Opa, só passando pra avisar que seu empréstimo do {bot.get_user(int(open(f'profile/{profile}/emprestimos/feito/{item}/credor', 'r+'))).name} de {int(open(f'profile/{profile}/emprestimos/feito/{item}/amount', 'r+'))} {coin_name} expirou.")
-                        await bot.get_user(int(open(f'profile/{profile}/emprestimos/feito/{item}/credor', 'r+'))).send(f"Opa, só passando pra avisar que seu empréstimo do {bot.get_user(int(profile)).name} de {int(open(f'profile/{profile}/emprestimos/feito/{item}/amount', 'r+'))} {coin_name} foi cobrado, e seu dinheiro já está na sua conta.")
-                        shutil.rmtree(f"profile/{profile}/emprestimos/feito/{item}")
+        for profile in profiles:
+            checkprofile(profile)
+            for item in os.listdir(f"profile/{profile}/emprestimos/feito"):
+                newdate1 = dateutil.parser.parse(open(f"profile/{profile}/emprestimos/feito/{item}/date", 'r+'))
+                diff = newdate1 - datetime.datetime.now()
+                if diff.days >= 30:
+                    decrease_coins(profile, int(open(f'profile/{profile}/emprestimos/feito/{item}/amount').read()))
+                    increase_coins(open(f"profile/{profile}/emprestimos/feito/{item}/credor").read(), int(open(f'profile/{profile}/emprestimos/feito/{item}/amount').read()))
+                    await bot.get_user(int(profile)).send(
+                        f"Opa, só passando pra avisar que seu empréstimo do {bot.get_user(int(open(f'profile/{profile}/emprestimos/feito/{item}/credor').read())).name} de {int(open(f'profile/{profile}/emprestimos/feito/{item}/amount').read())} {coin_name} expirou.")
+                    await bot.get_user(int(open(f'profile/{profile}/emprestimos/feito/{item}/credor').read())).send(f"Opa, só passando pra avisar que seu empréstimo do {bot.get_user(int(profile)).name} de {int(open(f'profile/{profile}/emprestimos/feito/{item}/amount').read())} {coin_name} foi cobrado, e seu dinheiro já está na sua conta.")
+                    shutil.rmtree(f"profile/{profile}/emprestimos/feito/{item}")
             if Path(f"profile/{profile}/premium").exists() is False:
                 pass
             else:
@@ -1512,7 +1512,7 @@ async def doar(ctx, amount: int, user: discord.Member):
 @bot.hybrid_command(name="emprestar", description="Empreste dinheiro para as pessoas.")
 @app_commands.describe(amount=f"A quantidade de {coin_name}", user="A Pessoa para quem você quer emprestar")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
-async def doar(ctx, amount: int, user: discord.Member):
+async def emprestar(ctx, amount: int, user: discord.Member):
     blah = user
     checkprofile(ctx.author.id)
     if amount > int(open(f"profile/{ctx.author.id}/coins", "r+").read()):
@@ -1527,6 +1527,10 @@ async def doar(ctx, amount: int, user: discord.Member):
         await ctx.send("Você não pode emprestar com você mesmo.")
         return
 
+    if Path(f"profile/{user.id}/emprestimos/feitos/{ctx.author.id}").exists() is True:
+        await ctx.send("Você já tem um empréstimo ativo com esse usuário.")
+        return
+
     checkprofile(user.id)
     aposta_message = await ctx.send(f"**Atenção {user.mention}, o {ctx.author.mention} quer emprestar {humanize.intcomma(amount)} {coin_name} para você. Reaja a esta mensagem com um emoji de dedão '👍' em 15 segundos para concordar com o empréstimo.**")
     await aposta_message.add_reaction('👍')
@@ -1537,22 +1541,23 @@ async def doar(ctx, amount: int, user: discord.Member):
         reaction, user = await bot.wait_for('reaction_add', timeout=15.0, check=check)
     except asyncio.TimeoutError:
         await ctx.send("Empréstimo cancelado.")
+        return
     else:
         decrease_coins(ctx.author.id, amount)
         increase_coins(user.id, amount)
 
-    current_date = datetime.date.today()
-    os.mkdir(f'profile/{user.id}/emprestimos/feito/{ctx.author.id}')
-    with open(f'profile/{user.id}/emprestimos/feito/{ctx.author.id}/date', 'w') as f:
-        f.write(current_date.isoformat())
-    with open(f'profile/{user.id}/emprestimos/feito/{ctx.author.id}/credor', 'w') as f:
-        f.write(ctx.author.id)
-    with open(f'profile/{user.id}/emprestimos/feito/{ctx.author.id}/amount', 'w') as f:
-        f.write(int(amount + (amount * 0.2)))
-    newdate1 = dateutil.parser.parse(open(f'profile/{user.id}/emprestimos/feito/{ctx.author.id}/date', 'r+'))
-    newdate1 = newdate1 + relativedelta(days=30)
-    await ctx.reply(
-        f"{user.display_name}! Você está devendo {amount + (amount * 0.2)} Jacktitas. Esses fundos serão automaticamente retirados da sua conta em `{newdate1.strftime('%d/%m')}`")
+        current_date = datetime.date.today()
+        os.mkdir(f'profile/{user.id}/emprestimos/feito/{ctx.author.id}')
+        with open(f'profile/{user.id}/emprestimos/feito/{ctx.author.id}/date', 'w') as f:
+            f.write(current_date.isoformat())
+        with open(f'profile/{user.id}/emprestimos/feito/{ctx.author.id}/credor', 'w') as f:
+            f.write(str(ctx.author.id))
+        with open(f'profile/{user.id}/emprestimos/feito/{ctx.author.id}/amount', 'w') as f:
+            f.write(str(int(amount + (amount * 0.2))))
+        newdate1 = dateutil.parser.parse(open(f'profile/{user.id}/emprestimos/feito/{ctx.author.id}/date', 'r+'))
+        newdate1 = newdate1 + relativedelta(days=30)
+        await ctx.reply(
+            f"{user.display_name}! Você está devendo {amount + (amount * 0.2)} Jacktitas. Esses fundos serão automaticamente retirados da sua conta em `{newdate1.strftime('%d/%m')}`")
 
 
 
