@@ -578,20 +578,22 @@ async def on_command_error(ctx, error):
         await ctx.reply("Me parece que você colou o tipo errado de argumento. Tente novamente.")
     elif isinstance(error, discord.ext.commands.CommandError):
         await ctx.reply("Oops! Infelizmente aconteceu um erro no comando :(")
-        embed = discord.Embed(title=':x: Event Error', colour=0xe74c3c)
+        embed = discord.Embed(title=':x: Command Event Error', colour=0xe64c3c)
         embed.add_field(name='Event', value=error)
         embed.description = '```py\n%s\n```' % traceback.format_exc()
         embed.timestamp = datetime.datetime.utcnow()
-        await bot.get_user(727194765610713138).send(embed=embed)
+        webhook = discord.SyncWebhook.from_url(open(f"webhook_url", "r+").read())
+        webhook.send(embed=embed)
 
 
 @bot.event
 async def on_error(event, *args, **kwargs):
-    embed = discord.Embed(title=':x: Event Error', colour=0xe74c3c)
+    embed = discord.Embed(title=':x: Internal Error', colour=0xe74c3c)
     embed.add_field(name='Event', value=event)
     embed.description = '```py\n%s\n```' % traceback.format_exc()
     embed.timestamp = datetime.datetime.utcnow()
-    await bot.get_user(727194765610713138).send(embed=embed)
+    webhook = discord.SyncWebhook.from_url(open(f"webhook_url", "r+").read())
+    webhook.send(embed=embed)
 
 
 @bot.event
