@@ -665,11 +665,12 @@ class LevelModal(BaseModal, title="Mensagem de LevelUp"):
     tag_content = discord.ui.TextInput(label="A mensagem", placeholder="Lembre-se que {{user}} vai mencionar o usuário, e {{level}} vai mandar seu novo nível!", min_length=1, max_length=300, style=discord.TextStyle.long)
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
+        await interaction.response.defer()
         with open(f'guilds/{interaction.guild_id}/lvup_message', 'w') as f:
             f.write(self.tag_content.value)
         message = open(f"guilds/{interaction.guild_id}/lvup_message", "r+").read().replace("{{user}}", "{usuário mencionado}")
         message = message.replace("{{level}}", "{nível}")
-        await interaction.response.send_message(f"Sua mensagem foi registrada! ela vai ficar assim:\n\n{message}", ephemeral=True)
+        await interaction.followup.send(f"Sua mensagem foi registrada! ela vai ficar assim:\n\n{message}", ephemeral=True)
         await super().on_submit(interaction)
 
 
@@ -881,10 +882,11 @@ class TagModal(BaseModal, title="Mensagem de boas vindas"):
     tag_content = discord.ui.TextInput(label="A mensagem", placeholder="Lembre-se que {{user}} vai mencionar o novo usuário!", min_length=1, max_length=300, style=discord.TextStyle.long)
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
+        await interaction.response.defer()
         with open(f'guilds/{interaction.guild_id}/welcome_message', 'w') as f:
             f.write(self.tag_content.value)
         message = open(f"guilds/{interaction.guild_id}/welcome_message", "r+").read().replace("{{user}}", "{usuário mencionado}")
-        await interaction.response.send_message(f"Sua mensagem foi registrada! ela vai ficar assim:\n\n{message}", ephemeral=True)
+        await interaction.followup.send(f"Sua mensagem foi registrada! ela vai ficar assim:\n\n{message}", ephemeral=True)
         await super().on_submit(interaction)
 
 
@@ -1161,9 +1163,10 @@ async def profile(ctx, rsuser: discord.User | None = None):
         tag_content = discord.ui.TextInput(label="Novo texto", placeholder="Eu sou uma pessoa muito legal...", min_length=1, max_length=1024, style=discord.TextStyle.long)
 
         async def on_submit(self, interaction: discord.Interaction) -> None:
+            await interaction.response.defer()
             with open(f'profile/{user_sent}/about', 'w') as f:
                 f.write(self.tag_content.value)
-            await interaction.response.send_message(f"Seu perfil foi atualizado", ephemeral=True)
+            await interaction.followup.send(f"Seu perfil foi atualizado", ephemeral=True)
             await super().on_submit(interaction)
 
     checkprofile(user_sent)
