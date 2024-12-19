@@ -79,7 +79,8 @@ class BaseView(discord.ui.View):
     # make sure that the view only processes interactions from the user who invoked the command
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user.id != self.user.id:
-            await interaction.response.send_message(
+            await interaction.response.defer()
+            await interaction.followup.send(
                 "Você não pode interagir com isso.", ephemeral=True
             )
             return False
@@ -147,7 +148,8 @@ class BaseModal(discord.ui.Modal):
         tb = "".join(traceback.format_exception(type(error), error, error.__traceback__))
         message = f"Oops, aconteceu um erro! :\n```py\n{tb}\n```"
         try:
-            await interaction.response.send_message(message, ephemeral=True)
+            await interaction.response.defer()
+            await interaction.followup.send(message, ephemeral=True)
         except discord.InteractionResponded:
             await interaction.edit_original_response(content=message, view=None)
         self.stop()
@@ -920,9 +922,10 @@ async def sobre(ctx):
         tag_content = discord.ui.TextInput(label="Descreva seu erro aqui", placeholder="Meu erro aconteceu blah blah blah...", min_length=1, max_length=1024, style=discord.TextStyle.long)
 
         async def on_submit(self, interaction: discord.Interaction) -> None:
+            await interaction.response.defer()
             idk = bot.get_user(int("727194765610713138"))
             await idk.send(f"**Erro reportado por {ctx.author.global_name} (ID: {ctx.author.id})**\n\nErro reportado: {self.tag_content.value}")
-            await interaction.response.send_message(f"Obrigado pela sua colaboração.", ephemeral=True)
+            await interaction.followup.send(f"Obrigado pela sua colaboração.", ephemeral=True)
             await super().on_submit(interaction)
 
     list = os.listdir("profile/")
