@@ -3,9 +3,11 @@ import discord
 import os
 import os.path
 import random
+import contextlib
 import urllib.request as urllib
 from pathlib import Path
 from discord.ext import commands
+from discord.ext import tasks
 from discord import app_commands
 from discord.ui.select import BaseSelect
 import asyncio
@@ -187,7 +189,10 @@ def dar_conquistas(user_id: int, conquista: str):
 # Define the XP functions we need.
 def increase_xp(user_sent, amount: int, guild: int):
     checkprofile(user_sent)
-    current_xp = int(open(f"profile/{user_sent}/experience-{guild}", "r+").read())
+    if open(f"profile/{user_sent}/experience-{guild}", "r+").read() == '':
+        with open(f'profile/{user_sent}/experience-{guild}', 'w') as f:
+            f.write("0")
+    current_xp = int(float(open(f"profile/{user_sent}/experience-{guild}", "r+").read()))
     with open(f'profile/{user_sent}/experience-{guild}', 'w') as f:
         f.write(str(current_xp + amount))
 
@@ -381,7 +386,36 @@ if sys.argv[1] == 'test_token':
 else:
     prefixes = "d$", "D$"
 client = MyClient(intents=intents)
-bot = commands.Bot(command_prefix=prefixes, intents=intents)
+# Dunno if it works, but let's try.
+bot = commands.AutoShardedBot(shard_count=1, command_prefix=prefixes, intents=intents)
+
+@tasks.loop(minutes=1440)  # every 30 minutes
+async def checkpremium():
+    with contextlib.suppress(Exception):
+        profiles = os.listdir("profile")
+        for profile in profiles:
+            checkonlyjack(profile)
+            for item in os.listdir(f"profile/{profile}/onlyjack/subto/"):
+                newdate1 = dateutil.parser.parse(open(f"profile/{profile}/onlyjack/subto/{item}/date", 'r+'))
+                diff = newdate1 - datetime.datetime.now()
+                if diff.days >=30:
+                    shutil.rmtree(f"profile/{profile}/onlyjack/subto/{item}")
+                    current_subs = int(open(f"profile/{item}/onlyjack/subs", "r+").read())
+                    with open(f'profile/{item}/onlyjack/subs', 'w') as f:
+                        f.write(str(current_subs - 1))
+            if Path(f"profile/{profile}/premium").exists() is False:
+                pass
+            else:
+                if bot.get_user(int(profile)) not in bought_two:
+                    bought_two.append(bot.get_user(int(profile)))
+                if bot.get_user(int(profile)) not in bought_four:
+                    bought_four.append(bot.get_user(int(profile)))
+                newdate1 = dateutil.parser.parse(open(f"profile/{profile}/premium/date", 'r+'))
+                if newdate1 + relativedelta(days=7) <= datetime.datetime.now():
+                    shutil.rmtree(f"profile/{profile}/premium")
+                    bought_two.remove(bot.get_user(int(profile)))
+                    bought_four.remove(bot.get_user(int(profile)))
+        
 
 
 # Initiate Bot's log, and define on_message functions.
@@ -389,6 +423,7 @@ bot = commands.Bot(command_prefix=prefixes, intents=intents)
 async def on_ready():
     print(f'Logged on as {bot.user}!')
     await bot.change_presence(activity=discord.CustomActivity(name=f"{open(f'custom_status', 'r+').read()} | d$help", emoji='👀'))
+    await checkpremium.start()
 
 
 def setup_experience(message):
@@ -536,31 +571,7 @@ async def on_message(message):
                         await channel_to_send.send(thing.replace("{{level}}", f"{experience_new}"))
                 with open(f'profile/{message.author.id}/level-{message.guild.id}', 'w') as f:
                     f.write(experience_new)
-        profiles = os.listdir("profile")
-        for profile in profiles:
-            checkonlyjack(profile)
-            for item in os.listdir(f"profile/{profile}/onlyjack/subto/"):
-                newdate1 = dateutil.parser.parse(open(f"profile/{profile}/onlyjack/subto/{item}/date", 'r+'))
-                diff = newdate1 - datetime.datetime.now()
-                if diff.days >=30:
-                    shutil.rmtree(f"profile/{profile}/onlyjack/subto/{item}")
-                    await bot.get_user(int(profile)).send(f"Opa, só passando pra avisar que sua assinatura do onlyjack de {bot.get_user(int(item)).name} expirou.")
-                    current_subs = int(open(f"profile/{item}/onlyjack/subs", "r+").read())
-                    with open(f'profile/{item}/onlyjack/subs', 'w') as f:
-                        f.write(str(current_subs - 1))
-            if Path(f"profile/{profile}/premium").exists() is False:
-                pass
-            else:
-                if bot.get_user(int(profile)) not in bought_two:
-                    bought_two.append(bot.get_user(int(profile)))
-                if bot.get_user(int(profile)) not in bought_four:
-                    bought_four.append(bot.get_user(int(profile)))
-                newdate1 = dateutil.parser.parse(open(f"profile/{profile}/premium/date", 'r+'))
-                if newdate1 + relativedelta(days=7) <= datetime.datetime.now():
-                    shutil.rmtree(f"profile/{profile}/premium")
-                    await bot.get_user(int(profile)).send("Opa, só passando pra avisar que seu premium expirou. Compre mais pra continuar aproveitando os benefícios!")
-                    bought_two.remove(bot.get_user(int(profile)))
-                    bought_four.remove(bot.get_user(int(profile)))
+
 
         await bot.process_commands(message)
 
@@ -583,7 +594,7 @@ async def on_command_error(ctx, error):
         embed = discord.Embed(title=':x: Command Event Error', colour=0xe64c3c)
         embed.add_field(name='Event', value=error)
         embed.description = '```py\n%s\n```' % traceback.format_exc()
-        embed.timestamp = datetime.datetime.utcnow()
+        embed.timestamp = datetime.datetime.now()
         webhook = discord.SyncWebhook.from_url(open(f"webhook_url", "r+").read())
         webhook.send(embed=embed)
 
@@ -593,7 +604,7 @@ async def on_error(event, *args, **kwargs):
     embed = discord.Embed(title=':x: Internal Error', colour=0xe74c3c)
     embed.add_field(name='Event', value=event)
     embed.description = '```py\n%s\n```' % traceback.format_exc()
-    embed.timestamp = datetime.datetime.utcnow()
+    embed.timestamp = datetime.datetime.now()
     webhook = discord.SyncWebhook.from_url(open(f"webhook_url", "r+").read())
     webhook.send(embed=embed)
 
@@ -2740,4 +2751,5 @@ async def xadrez(ctx, desafiante: discord.Member):
 
 
 # bot.remove_command('help')
+
 bot.run(open(sys.argv[1], "r+").read(), log_level=logging.INFO)
