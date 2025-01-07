@@ -54,7 +54,6 @@ roleta_cooldown = []
 investir_cooldown = []
 rinha_cooldown = []
 rinha_resposta_cooldown = []
-uwu_array = []
 depression = []
 cris_array = []
 gacha_array = []
@@ -642,6 +641,9 @@ async def on_member_join(member):
 @commands.has_permissions(administrator=True)
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def habilitarlvup(ctx) -> None:
+	if isinstance(ctx.message.channel, discord.DMChannel):
+		await ctx.reply("Esse comando não está disponível via DM.")
+		return
     with open(f'guilds/{ctx.guild.id}/lvup_channel.toml', 'r') as f:
         config = toml.load(f)
 
@@ -660,6 +662,9 @@ async def habilitarlvup(ctx) -> None:
 @commands.has_permissions(administrator=True)
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def desabilitarlvup(ctx) -> None:
+	if isinstance(ctx.message.channel, discord.DMChannel):
+		await ctx.reply("Esse comando não está disponível via DM.")
+		return
     with open(f'guilds/{ctx.guild.id}/lvup_channel.toml', 'r') as f:
         config = toml.load(f)
 
@@ -691,6 +696,9 @@ class LevelModal(BaseModal, title="Mensagem de LevelUp"):
 @commands.has_permissions(administrator=True)
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def mensagemdelevelup(ctx: discord.ApplicationContext):
+	if isinstance(ctx.message.channel, discord.DMChannel):
+		await ctx.reply("Esse comando não está disponível via DM.")
+		return
     if Path(f"guilds/{ctx.guild.id}/lvup_message").exists() is False:
         with open(f'guilds/{ctx.guild.id}/lvup_message', 'w') as f:
             f.write("Parabéns! O membro {{user}} chegou ao nível {{level}}!")
@@ -739,6 +747,9 @@ async def updatestatus(ctx):
 @commands.has_permissions(administrator=True)
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def removercomando(ctx, comando: str) -> None:
+	if isinstance(ctx.message.channel, discord.DMChannel):
+		await ctx.reply("Esse comando não está disponível via DM.")
+		return
     if Path(f"guilds/{ctx.guild.id}/custom_commands/{comando}").exists() is False:
         await ctx.send(f"O comando {comando} não existe... você escreveu corretamente?", ephemeral=True)
     else:
@@ -751,6 +762,9 @@ async def removercomando(ctx, comando: str) -> None:
 @commands.has_permissions(administrator=True)
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def increasexp(ctx, quantidade: int, usuário: discord.Member) -> None:
+	if isinstance(ctx.message.channel, discord.DMChannel):
+		await ctx.reply("Esse comando não está disponível via DM.")
+		return
     increase_xp(usuário.id, quantidade, ctx.guild.id)
     await ctx.send(f"Adicionou {humanize.intcomma(quantidade)} XP para {usuário.display_name}")
 
@@ -762,6 +776,9 @@ async def increasexp(ctx, quantidade: int, usuário: discord.Member) -> None:
 @commands.has_permissions(administrator=True)
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def decreasexp(ctx, quantidade: int, usuário: discord.Member):
+	if isinstance(ctx.message.channel, discord.DMChannel):
+		await ctx.reply("Esse comando não está disponível via DM.")
+		return
     decrease_xp(usuário.id, quantidade, ctx.guild.id)
     await ctx.send(f"Removeu {humanize.intcomma(quantidade)} XP de {usuário.display_name}")
 
@@ -770,6 +787,9 @@ async def decreasexp(ctx, quantidade: int, usuário: discord.Member):
 @commands.has_permissions(administrator=True)
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def habilitarnsfw(ctx) -> None:
+	if isinstance(ctx.message.channel, discord.DMChannel):
+		await ctx.reply("Esse comando não está disponível via DM.")
+		return
     with open('config_nsfw.toml', 'r') as f:
         config = toml.load(f)
 
@@ -788,6 +808,9 @@ async def habilitarnsfw(ctx) -> None:
 @commands.has_permissions(administrator=True)
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def desabilitarnsfw(ctx) -> None:
+	if isinstance(ctx.message.channel, discord.DMChannel):
+		await ctx.reply("Esse comando não está disponível via DM.")
+		return
     with open('config_nsfw.toml', 'r') as f:
         config = toml.load(f)
 
@@ -806,6 +829,9 @@ async def desabilitarnsfw(ctx) -> None:
 @commands.has_permissions(administrator=True)
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def habilitarcomandos(ctx) -> None:
+	if isinstance(ctx.message.channel, discord.DMChannel):
+		await ctx.reply("Esse comando não está disponível via DM.")
+		return
     with open('config_channels.toml', 'r') as f:
         config = toml.load(f)
 
@@ -824,6 +850,9 @@ async def habilitarcomandos(ctx) -> None:
 @commands.has_permissions(administrator=True)
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def desabilitarcomandos(ctx) -> None:
+	if isinstance(ctx.message.channel, discord.DMChannel):
+		await ctx.reply("Esse comando não está disponível via DM.")
+		return
     with open('config_channels.toml', 'r') as f:
         config = toml.load(f)
 
@@ -842,6 +871,9 @@ async def desabilitarcomandos(ctx) -> None:
 @commands.has_permissions(administrator=True)
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def habilitarboasvindas(ctx) -> None:
+	if isinstance(ctx.message.channel, discord.DMChannel):
+		await ctx.reply("Esse comando não está disponível via DM.")
+		return
     if Path(f"guilds/{ctx.message.guild.id}").exists() is False:
         os.makedirs(f"guilds/{ctx.message.guild.id}")
     if Path(f"guilds/{ctx.message.guild.id}/welcome_message").exists() is False:
@@ -869,6 +901,9 @@ async def habilitarboasvindas(ctx) -> None:
 @commands.has_permissions(administrator=True)
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def desabilitarboasvindas(ctx) -> None:
+	if isinstance(ctx.message.channel, discord.DMChannel):
+		await ctx.reply("Esse comando não está disponível via DM.")
+		return
     if Path(f"guilds/{ctx.message.guild.id}").exists() is False:
         os.makedirs(f"guilds/{ctx.message.guild.id}")
     if Path(f"guilds/{ctx.message.guild.id}/welcome_message").exists() is False:
@@ -907,6 +942,9 @@ class TagModal(BaseModal, title="Mensagem de boas vindas"):
 @commands.has_permissions(administrator=True)
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def mensagemdeboasvindas(ctx: discord.ApplicationContext):
+	if isinstance(ctx.message.channel, discord.DMChannel):
+		await ctx.reply("Esse comando não está disponível via DM.")
+		return
     if Path(f"guilds/{ctx.message.guild.id}/welcome_message").exists() is False:
         with open(f'guilds/{ctx.message.guild.id}/welcome_message', 'w') as f:
             f.write("Uma pessoa nova entrou! Bem vindo {{user}}!")
@@ -960,18 +998,6 @@ async def sobre(ctx):
 
 
 
-@bot.hybrid_command(name="uwu", description="Ative o modo UWU")
-@commands.cooldown(1, cooldown_command, commands.BucketType.user)
-async def uwu(ctx):
-    await ctx.reply("Esse comando não existe.")
-#    if f"active-{ctx.guild.id}" in uwu_array:
-#        uwu_array.remove(f"active-{ctx.guild.id}")
-#        await ctx.reply("Modo UWU desativado!")
-#    else:
-#        uwu_array.append(f"active-{ctx.guild.id}")
-#        await ctx.reply("Modo UWU Ativado!")
-
-
 # Battle Command
 # Simmulates an idiotic battle between two concepts.
 @bot.hybrid_command(name="battle", description="Simula uma batalha")
@@ -979,28 +1005,17 @@ async def uwu(ctx):
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def battle(ctx, arg1: str, arg2: str) -> None:
     rand1 = [0, 1]
-    if f"active-{ctx.guild.id}" in uwu_array:
-        if random.choice(rand1) == 0:
-            comeco = ["Foi pow pouco, mas ", "E com gwande fowga ", "Foi uma wuta justa, mas "]
-            fim = ["esmagando seu c-cwânyio", "abwindo um buwaco em seu peito.", "decepando s-s-sua cabeça."]
-            jokes = f"{random.choice(comeco)}{arg1} ganhow a l-luta contwa {arg2} {random.choice(fim)}"
-            await ctx.send(jokes)
-        else:
-            comeco = ["Foi pow pouco, mas ", "E com gwande fowga ", "Foi uma wuta justa, mas "]
-            fim = ["esmagando seu c-cwânyio", "abwindo um buwaco em seu peito.", "decepando s-s-sua cabeça.", "desintegwando seu cowpo.", "sewwando seu c-cowpo ao meio."]
-            jokes = f"{random.choice(comeco)}{arg2} ganhow a l-luta contwa {arg1} {random.choice(fim)}"
-            await ctx.send(jokes)
-    else:
-        if random.choice(rand1) == 0:
-            comeco = ["Foi por pouco, mas ", "E com grande folga, ", "Foi uma luta justa, mas "]
-            fim = ["esmagando seu crânio.", "abrindo um buraco em seu peito.", "decepando sua cabeça."]
-            jokes = f"{random.choice(comeco)}{arg1} ganhou a luta contra {arg2} {random.choice(fim)}"
-            await ctx.send(jokes)
-        else:
-            comeco = ["Foi por pouco, mas ", "E com grande folga, ", "Foi uma luta justa, mas "]
-            fim = ["esmagando seu crânio.", "abrindo um buraco em seu peito.", "decepando sua cabeça.", "desintegrando seu corpo.", "serrando seu corpo ao meio."]
-            jokes = f"{random.choice(comeco)}{arg2} ganhou a luta contra {arg1} {random.choice(fim)}"
-            await ctx.send(jokes)
+
+	if random.choice(rand1) == 0:
+		comeco = ["Foi por pouco, mas ", "E com grande folga, ", "Foi uma luta justa, mas "]
+		fim = ["esmagando seu crânio.", "abrindo um buraco em seu peito.", "decepando sua cabeça."]
+		jokes = f"{random.choice(comeco)}{arg1} ganhou a luta contra {arg2} {random.choice(fim)}"
+		await ctx.send(jokes)
+	else:
+		comeco = ["Foi por pouco, mas ", "E com grande folga, ", "Foi uma luta justa, mas "]
+		fim = ["esmagando seu crânio.", "abrindo um buraco em seu peito.", "decepando sua cabeça.", "desintegrando seu corpo.", "serrando seu corpo ao meio."]
+		jokes = f"{random.choice(comeco)}{arg2} ganhou a luta contra {arg1} {random.choice(fim)}"
+		await ctx.send(jokes)
 
 
 # Gerador de cancelamento
@@ -1008,12 +1023,8 @@ async def battle(ctx, arg1: str, arg2: str) -> None:
 @bot.hybrid_command(name="cancelamento", description="Simula um cancelamento")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def cancelamento(ctx):
-    if f"active-{ctx.guild.id}" in uwu_array:
-        motivos = ["sew ;;w;; atwaente d-demais", "tew chawme d-demais", "sew ;;w;; uma pessoa howwívew", "sew ;;w;; uma gwande gostosa", "sew ;;w;; boy wixo", "sew ;;w;; comunyista", "debochaw *blushes* demais sew intewigente d-demais", "sew ;;w;; p-padwãozinho", "pediw ^w^ muito biscoito", "sew ;;w;; cownyo sew uma dewícia", "sew ;;w;; gado d-demais", "não sew nyinguém", "sew ;;w;; posew", "sew ;;w;; insupowtávew", "sew ;;w;; insensívew", "não fazew nyada", "sew ;;w;; twouxa", "se atwasaw", "sempwe sew impaciente d-demais", "tew viwado o Cowonga", "sew ;;w;; BV", "tew muita pweguiça", "sew ;;w;; inútiw", "sew ;;w;; inyadimpwente >w< nyo S-Sewasa", "contaw muita piada wuim", "pwocwastinyaw d-demais", "pow se considewaw incancewávew"]
-        await ctx.send(f"{ctx.author.mention} foi cancewado pow {random.choice(motivos)}")
-    else:
-        motivos = ["ser atraente demais", "ter charme demais", "ser uma pessoa horrível", "ser uma grande gostosa", "ser boy lixo", "ser comunista", "debochar demais ser inteligente demais", "ser padrãozinho", "pedir muito biscoito", "ser corno ser uma delícia", "ser gado demais", "não ser ninguém", "ser poser", "ser insuportável", "ser insensível", "não fazer nada", "ser trouxa", "se atrasar", "sempre ser impaciente demais", "ter virado o Coronga", "ser BV", "ter muita preguiça", "ser inútil", "ser inadimplente no Serasa", "contar muita piada ruim", "procrastinar demais", "por se considerar incancelável"]
-        await ctx.send(f"{ctx.author.mention} foi cancelado por {random.choice(motivos)}")
+	motivos = ["ser atraente demais", "ter charme demais", "ser uma pessoa horrível", "ser uma grande gostosa", "ser boy lixo", "ser comunista", "debochar demais ser inteligente demais", "ser padrãozinho", "pedir muito biscoito", "ser corno ser uma delícia", "ser gado demais", "não ser ninguém", "ser poser", "ser insuportável", "ser insensível", "não fazer nada", "ser trouxa", "se atrasar", "sempre ser impaciente demais", "ter virado o Coronga", "ser BV", "ter muita preguiça", "ser inútil", "ser inadimplente no Serasa", "contar muita piada ruim", "procrastinar demais", "por se considerar incancelável"]
+	await ctx.send(f"{ctx.author.mention} foi cancelado por {random.choice(motivos)}")
 
 
 # SÁBIO
@@ -1022,10 +1033,7 @@ async def cancelamento(ctx):
 @app_commands.describe(pergunta="A pergunta que você quer")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def sabio(ctx, *, pergunta: str):
-    if f"active-{ctx.guild.id}" in uwu_array:
-        jokes = ["SIM, C-C-COM TODA CEWTEZA", "Sim, >w< com cewteza.", "Sim.", "Pwovavewmente.", "Não sei dizew.", "Pwovavewmente não.", "Não.", 'Com c-cewteza n-não.', "NÃO, C-C-COM TODA CEWTEZA NÃO"]
-    else:
-        jokes = ["SIM, COM TODA CERTEZA", "Sim, com certeza.", "Sim.", "Provavelmente.", "Não sei dizer.", "Provavelmente não.", "Não.", 'Com certeza não.', "NÃO, COM TODA CERTEZA NÃO"]
+	jokes = ["SIM, COM TODA CERTEZA", "Sim, com certeza.", "Sim.", "Provavelmente.", "Não sei dizer.", "Provavelmente não.", "Não.", 'Com certeza não.', "NÃO, COM TODA CERTEZA NÃO"]
     await ctx.send(random.choice(jokes))
 
 
@@ -1035,10 +1043,7 @@ async def sabio(ctx, *, pergunta: str):
 @app_commands.describe(lover="Seu amado")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def ppt(ctx, lover: discord.Member) -> None:
-    if f"active-{ctx.guild.id}" in uwu_array:
-        jokes = f"Cawo/Cawa {lover}, o {ctx.author.mention} gostawia de d-decwawaw seus sentimentos a você."
-    else:
-        jokes = f"Caro/Cara {lover}, o {ctx.author.mention} gostaria de declarar seus sentimentos a você."
+    jokes = f"Caro/Cara {lover}, o {ctx.author.mention} gostaria de declarar seus sentimentos a você."
     await ctx.send(jokes)
 
 
@@ -1049,10 +1054,7 @@ async def ppt(ctx, lover: discord.Member) -> None:
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def jogo(ctx, time1: str, time2: str) -> None:
     rand1 = [0, 1, 2, 3, 4, 5]
-    if f"active-{ctx.guild.id}" in uwu_array:
-        jokes = f"O wesuwtado da pawtida de {time1} x {time2} vai sew {random.choice(rand1)} x {random.choice(rand1)} UWU"
-    else:
-        jokes = f"O resultado da partida de {time1} x {time2} vai ser {random.choice(rand1)} x {random.choice(rand1)}"
+    jokes = f"O resultado da partida de {time1} x {time2} vai ser {random.choice(rand1)} x {random.choice(rand1)}"
     await ctx.send(jokes)
 
 
@@ -1122,24 +1124,17 @@ async def daily(ctx):
     checkprofile(ctx.author.id)
 
     if ctx.author in daily_cooldown:
-        if f"active-{ctx.guild.id}" in uwu_array:
-            await ctx.send(f"opaaa ÚwÚ pewa *cries* w-wá, você já pegou seus {coin_name} diáwios. Espewe m-mais um tempo pawa pegaw nyovamente. *sweats* (Dica UWU: d$comprar)")
-        else:
-            await ctx.send(f"Opaaa pera lá, você já pegou seus {coin_name} diários. Espere mais um tempo para pegar novamente. (Dica: d$comprar)")
+		await ctx.send(f"Opaaa pera lá, você já pegou seus {coin_name} diários. Espere mais um tempo para pegar novamente. (Dica: d$comprar)")
 
     else:
         if Path(f"profile/{ctx.author.id}/premium").exists() is True:
             increase_coins(ctx.author.id, 2200)
-            if f"active-{ctx.guild.id}" in uwu_array:
-                await ctx.reply(f"Você ganhou 2200 {coin_name}?!?1 (Bônyus de Pwemium)")
-            else:
-                await ctx.reply(f"Você ganhou 2200 {coin_name}! (Bônus de Premium)")
+
+			await ctx.reply(f"Você ganhou 2200 {coin_name}! (Bônus de Premium)")
         else:
             increase_coins(ctx.author.id, 1100)
-            if f"active-{ctx.guild.id}" in uwu_array:
-                await ctx.reply(f"Você ganhou 1100 {coin_name}?!?1")
-            else:
-                await ctx.reply(f"Você ganhou 1100 {coin_name}!")
+
+			await ctx.reply(f"Você ganhou 1100 {coin_name}!")
         daily_cooldown.append(ctx.author)
         await asyncio.sleep(2500)
         daily_cooldown.remove(ctx.author)
@@ -1185,7 +1180,11 @@ async def profile(ctx, rsuser: discord.User | None = None):
 
     checkprofile(user_sent)
 
-    if Path(f"profile/{user_sent}/premium").exists() is True:
+    if str(user_sent) == "727194765610713138":
+        embed = discord.Embed(title=f"Perfil do/a {bot.get_user(int(user_sent)).display_name} (🤖 Dono do bot)",
+                              description="",
+                              colour=12526271)
+    elif Path(f"profile/{user_sent}/premium").exists() is True:
         embed = discord.Embed(title=f"Perfil do/a {bot.get_user(int(user_sent)).display_name} (👑 Premium)",
                               description="",
                               colour=0xf5c211)
@@ -1206,9 +1205,11 @@ async def profile(ctx, rsuser: discord.User | None = None):
     embed.add_field(name=f"{coin_name}",
                     value=f"""D£ {humanize.intcomma(open(f"profile/{user_sent}/coins", "r+").read())}""",
                     inline=False)
-    embed.add_field(name="Pontos de Experiência (Neste Servidor) - Level",
-                    value=f"""{humanize.intcomma(open(f"profile/{user_sent}/experience-{ctx.guild.id}", "r+").read())} XP - LV {open(f'profile/{user_sent}/level-{ctx.guild.id}', 'r+').read()}""",
-                    inline=False)
+	if isinstance(ctx.message.channel, discord.DMChannel) == False:
+		embed.add_field(name="Pontos de Experiência (Neste Servidor) - Level",
+						value=f"""{humanize.intcomma(open(f"profile/{user_sent}/experience-{ctx.guild.id}", "r+").read())} XP - LV {open(f'profile/{user_sent}/level-{ctx.guild.id}', 'r+').read()}""",
+						inline=False)
+
     embed.add_field(name="Apostas vencidas",
                     value=f"""{open(f"profile/{user_sent}/duelos", "r+").read()}""",
                     inline=False)
@@ -1276,25 +1277,19 @@ async def lojinha(ctx, arg1: Item | None = None):
         current_coins = open(f"profile/{ctx.author.id}/coins", "r+").read()
         if int(float(current_coins)) >= price_1:
             decrease_coins(ctx.author.id, price_1)
-            if f"active-{ctx.guild.id}" in uwu_array:
-                await ctx.send("Você compwou o benyefício 1.")
-            else:
-                await ctx.send("Você comprou o benefício 1.")
+
+            await ctx.send("Você comprou o benefício 1.")
             bought_two.append(ctx.author)
             await asyncio.sleep(2500)  # time in seconds
             bought_two.remove(ctx.author)
         else:
-            if f"active-{ctx.guild.id}" in uwu_array:
-                await ctx.send(f"Ah mais que triste. Você não tem {coin_name} o suficiente. (Dica: d$comprar)")
-            else:
-                await ctx.send(f"A-Ah, m-mais que twiste!!11 você não tem {coin_name} o suficiente. *looks at you* (Dica UWU: d$comprar)")
+
+			await ctx.send(f"A-Ah, m-mais que twiste!!11 você não tem {coin_name} o suficiente. *looks at you* (Dica UWU: d$comprar)")
     elif arg1 == "2":
         current_coins = open(f"profile/{ctx.author.id}/coins", "r+").read()
         if int(float(current_coins)) >= price_2:
-            if f"active-{ctx.guild.id}" in uwu_array:
-                await ctx.send("Você compwou o benyefício 2. Pwimeiwamente, wesponda a essa mensagem com o nyome do comando. (Exempwo, se você cowocaw 'exampwe', seu comando vai sew 'cd$exampwe')")
-            else:
-                await ctx.send("Você comprou o benefício 2. Primeiramente, responda a essa mensagem com o nome do comando. (Exemplo, se você colocar 'example', seu comando vai ser 'cd$example')")
+
+			await ctx.send("Você comprou o benefício 2. Primeiramente, responda a essa mensagem com o nome do comando. (Exemplo, se você colocar 'example', seu comando vai ser 'cd$example')")
 
             def sus(m):
                 return m.author == ctx.author
@@ -1315,10 +1310,8 @@ async def lojinha(ctx, arg1: Item | None = None):
                     if Path(f"guilds/{ctx.guild.id}/custom_commands/{msg1.content.lower()}").exists() is True:
                         await ctx.reply("Oops, esse comando já existe.")
                         return
-                if f"active-{ctx.guild.id}" in uwu_array:
-                    await ctx.send("gowa, wesponda a essa mensagem com o que você quew que o comando mande (GIFs, mensagens, etc)")
-                else:
-                    await ctx.send("Agora, responda a essa mensagem com o que você quer que o comando mande (GIFs, mensagens, etc)")
+
+				await ctx.send("Agora, responda a essa mensagem com o que você quer que o comando mande (GIFs, mensagens, etc)")
 
                 def sus(m):
                     return m.author == ctx.author
@@ -1342,62 +1335,40 @@ async def lojinha(ctx, arg1: Item | None = None):
                     with open(f'guilds/{ctx.guild.id}/custom_commands/{msg1.content.lower()}', 'w') as f:
                         f.write(" ".join(msgcontent))
         else:
-            if f"active-{ctx.guild.id}" not in uwu_array:
-                await ctx.send(f"Ah mais que triste. Você não tem {coin_name} o suficiente. (Dica: d$comprar)")
-            else:
-                await ctx.send(f"A-Ah, m-mais que twiste!!11 você não tem {coin_name} o suficiente. *looks at you* (Dica UWU: d$comprar)")
+
+			await ctx.send(f"Ah mais que triste. Você não tem {coin_name} o suficiente. (Dica: d$comprar)")
+
     elif arg1 == "3":
         current_coins = open(f"profile/{ctx.author.id}/coins", "r+").read()
         if int(float(current_coins)) >= price_3:
             decrease_coins(ctx.author.id, price_3)
-            if f"active-{ctx.guild.id}" in uwu_array:
-                await ctx.send("Você compwou o benyefício 3.")
-            else:
-                await ctx.send("Você comprou o benefício 3.")
+
+			await ctx.send("Você comprou o benefício 3.")
             bought_four.append(ctx.author)
             await asyncio.sleep(2500)  # time in seconds
             bought_four.remove(ctx.author)
         else:
-            if f"active-{ctx.guild.id}" not in uwu_array:
-                await ctx.send(f"Ah mais que triste. Você não tem {coin_name} o suficiente. (Dica: d$comprar)")
-            else:
-                await ctx.send(f"A-Ah, m-mais que twiste!!11 você não tem {coin_name} o suficiente. *looks at you* (Dica UWU: d$comprar)")
+
+			await ctx.send(f"Ah mais que triste. Você não tem {coin_name} o suficiente. (Dica: d$comprar)")
 
     elif arg1 is None:
-        if f"active-{ctx.guild.id}" in uwu_array:
-            embed = discord.Embed(title=f"wojinha *huggles tightly* do {bot_name}",
-                                  description=f"compwe >w< benyefícios :3 com seus {bot_name} *walks away* Coins aqui?!?! - Mande o comando 'd$lojinha <numero>' pawa compwaw!!11 *screeches*",
-                                  colour=0x00b0f4)
 
-            embed.add_field(name="I - Rinha e d-duelo Coowdown Wemuvw UWU",
-                            value=f"Não seja afetado pewo coowdown das apostas e d-duelo pow 40 m-minyutos - {price_1} {coin_name}",
-                            inline=False)
-            embed.add_field(name="II - C-Comando customizado",
-                            value=f"cowoque :3 um comando customizado com seu usewnyame ;;w;; - {price_2} {coin_name}",
-                            inline=False)
-            embed.add_field(name="III - Sonyegaw impostos",
-                            value=f"Seja um fowa da wei e pague zewo impostos nya s-suas twansfewencias pow 40 m-minyutos - {price_3} {coin_name}",
-                            inline=False)
+		embed = discord.Embed(title=f"Lojinha do {bot_name}",
+							  description=f"Compre benefícios com seus {coin_name} aqui! - Mande o comando '$lojinha <numero>' para comprar!",
+							  colour=0x00b0f4)
 
-            embed.set_footer(text=f"{bot_name}",
-                             icon_url=bot.user.display_avatar)
-        else:
-            embed = discord.Embed(title=f"Lojinha do {bot_name}",
-                                  description=f"Compre benefícios com seus {coin_name} aqui! - Mande o comando '$lojinha <numero>' para comprar!",
-                                  colour=0x00b0f4)
+		embed.add_field(name=f"I - Rinha e Duelo Cooldown Remover",
+						value=f"Não seja afetado pelo cooldown das apostas e duelos por 40 minutos - {price_1} {coin_name}",
+						inline=False)
+		embed.add_field(name=f"II - Comando customizado",
+						value=f"Coloque um comando customizado com seu username - {price_2} {coin_name}s",
+						inline=False)
+		embed.add_field(name=f"III - Sonegar impostos",
+						value=f"Seja um fora da lei e pague zero impostos na suas transferencias por 40 minutos - {price_3} {coin_name}",
+						inline=False)
 
-            embed.add_field(name=f"I - Rinha e Duelo Cooldown Remover",
-                            value=f"Não seja afetado pelo cooldown das apostas e duelos por 40 minutos - {price_1} {coin_name}",
-                            inline=False)
-            embed.add_field(name=f"II - Comando customizado",
-                            value=f"Coloque um comando customizado com seu username - {price_2} {coin_name}s",
-                            inline=False)
-            embed.add_field(name=f"III - Sonegar impostos",
-                            value=f"Seja um fora da lei e pague zero impostos na suas transferencias por 40 minutos - {price_3} {coin_name}",
-                            inline=False)
-
-            embed.set_footer(text=f"{bot_name}",
-                             icon_url=bot.user.display_avatar)
+		embed.set_footer(text=f"{bot_name}",
+						 icon_url=bot.user.display_avatar)
 
         await ctx.send(embed=embed)
 
@@ -1420,23 +1391,17 @@ async def investir(ctx, arg1: int) -> None:
         return
 
     if arg1 > int(float(open(f"profile/{ctx.author.id}/coins", "r+").read())):
-        if f"active-{ctx.guild.id}" in uwu_array:
-            await ctx.reply("Você não tem fundos o s-suficiente pwa i-investiw. (Dica UWU: d$comprar)")
-        else:
-            await ctx.reply("Você não tem fundos o suficiente pra investir. (Dica: d$comprar)")
+
+		await ctx.reply("Você não tem fundos o suficiente pra investir. (Dica: d$comprar)")
     else:
         if resultado == "win":
-            if f"active-{ctx.guild.id}" in uwu_array:
-                await ctx.reply(f"Você wucwou {humanize.intcomma(str(win_thing).replace('0.', ''))}%! seu ^w^ wucwo totaw :3 foi {int(int(arg1)*win_thing / 100)} {coin_name}!")
-            else:
-                await ctx.reply(f"Você lucrou {humanize.intcomma(str(win_thing).replace('0.', ''))}%! Seu lucro total foi {int(int(arg1)*win_thing / 100)} {coin_name}!")
+
+            await ctx.reply(f"Você lucrou {humanize.intcomma(str(win_thing).replace('0.', ''))}%! Seu lucro total foi {int(int(arg1)*win_thing / 100)} {coin_name}!")
             new_coins = int(round(int(arg1) * win_thing / 100))
             increase_coins(ctx.author.id, new_coins)
         else:
-            if f"active-{ctx.guild.id}" in uwu_array:
-                await ctx.reply(f"Você pewdeu {humanize.intcomma(str(win_thing).replace('0.', ''))}%! Suas pewdas totais fowam *twerks* {int(round(int(arg1)*win_thing / 100))} {coin_name}... Boa sowte nya pwóxima...")
-            else:
-                await ctx.reply(f"Você perdeu {humanize.intcomma(str(win_thing).replace('0.', ''))}%! Suas perdas totais foram {int(round(int(arg1)*win_thing / 100))} {coin_name}... Boa sorte na próxima...")
+
+			await ctx.reply(f"Você perdeu {humanize.intcomma(str(win_thing).replace('0.', ''))}%! Suas perdas totais foram {int(round(int(arg1)*win_thing / 100))} {coin_name}... Boa sorte na próxima...")
             new_coins = int(round(int(arg1) * win_thing / 100))
             decrease_coins(ctx.author.id, new_coins)
 
@@ -1451,16 +1416,12 @@ async def roleta(ctx):
     resultado = random.choice(roleta_random)
 
     if ctx.author in roleta_cooldown:
-        if f"active-{ctx.guild.id}" in uwu_array:
-            await ctx.send("opaaa ÚwÚ pewa *cries* w-wá, você já pegou seu giwo. Espewe m-mais um tempo pawa pegaw nyovamente. *sweats* (Dica UWU: d$comprar)")
-        else:
-            await ctx.send("Opaaa pera lá, você já pegou seu giro. Espere mais um tempo para pegar novamente. (Dica: d$comprar)")
+
+		await ctx.send("Opaaa pera lá, você já pegou seu giro. Espere mais um tempo para pegar novamente. (Dica: d$comprar)")
 
     else:
-        if f"active-{ctx.guild.id}" in uwu_array:
-            await ctx.send(f"O wesuwtado da s-s-sua w-woweta foi... {resultado} {coin_name}?!?1")
-        else:
-            await ctx.send(f"O resultado da sua roleta foi... {resultado} {coin_name}!")
+
+		await ctx.send(f"O resultado da sua roleta foi... {resultado} {coin_name}!")
         increase_coins(ctx.author.id, resultado)
         roleta_cooldown.append(ctx.author)
         await asyncio.sleep(2000)
@@ -1479,10 +1440,8 @@ async def doar(ctx, amount: int, user: discord.Member):
     else:
         checkprofile(user.id)
         if amount > int(open(f"profile/{ctx.author.id}/coins", "r+").read()):
-            if f"active-{ctx.guild.id}" in uwu_array:
-                await ctx.send("Você não tem fundos o s-suficiente pwa compwetaw essa t-twansação. (Dica UWU: d$comprar)")
-            else:
-                await ctx.send("Você não tem fundos o suficiente pra completar essa transação. (Dica: d$comprar)")
+
+			await ctx.send("Você não tem fundos o suficiente pra completar essa transação. (Dica: d$comprar)")
         else:
             if amount < 0:
                 await ctx.send("Você não pode doar um valor negativo ou igual a zero.")
@@ -1497,17 +1456,12 @@ async def doar(ctx, amount: int, user: discord.Member):
             increase_coins(user.id, amount - imposto)
             increase_coins(727194765610713138, imposto)
             if imposto != 0:
-                if f"active-{ctx.guild.id}" in uwu_array:
-                    await ctx.send(f"Você twansfewiu *looks at you* {humanize.intcomma(amount)} :3 {bot_name} *walks away* coins pawa {user.mention}! (imposto cobwado: {str(int(imposto))} {coin_name})")
-                    await ctx.send(f"compwe >w< o benyefício 4 nya d$wojinha pawa não pagaw ^w^ impostos?!!")
-                else:
-                    await ctx.send(f"Você transferiu {humanize.intcomma(amount)} {coin_name} para {user.mention}! (Imposto cobrado: {str(int(imposto))} {coin_name})")
-                    await ctx.send(f"Compre o benefício 4 na d$lojinha para não pagar impostos!")
+
+				await ctx.send(f"Você transferiu {humanize.intcomma(amount)} {coin_name} para {user.mention}! (Imposto cobrado: {str(int(imposto))} {coin_name})")
+				await ctx.send(f"Compre o benefício 4 na d$lojinha para não pagar impostos!")
             else:
-                if f"active-{ctx.guild.id}" in uwu_array:
-                    await ctx.send(f"Você twansfewiu *looks at you* {humanize.intcomma(amount)} :3 {bot_name} *walks away* coins pawa {user.mention}! (Sem impostos cobwados *notices buldge*)")
-                else:
-                    await ctx.send(f"Você transferiu {humanize.intcomma(amount)} {coin_name} para {user.mention}! (Sem impostos cobrados)")
+
+				await ctx.send(f"Você transferiu {humanize.intcomma(amount)} {coin_name} para {user.mention}! (Sem impostos cobrados)")
 
 
 @bot.hybrid_command(name="adivinhar", description="Adivinhe um número e ganhe sonhos... ou perca eles...")
@@ -1524,25 +1478,19 @@ async def adivinhar(ctx, amount: int, number: int):
             dar_conquistas(ctx.author.id, "1")
             await ctx.send("**Conquista obtida:** *Eu confio na sorte!*")
     if amount > int(open(f"profile/{ctx.author.id}/coins", "r+").read()):
-        if f"active-{ctx.guild.id}" in uwu_array:
-            await ctx.reply("me *screeches* pawece que você não pode cobwiw essa aposta... (Dica UWU: d$comprar)")
-        else:
-            await ctx.reply("Me parece que você não pode cobrir essa aposta... (Dica: d$comprar)")
+
+		await ctx.reply("Me parece que você não pode cobrir essa aposta... (Dica: d$comprar)")
         if amount < 0:
             await ctx.send("Você não pode apostar um valor negativo ou igual a zero.")
             return
     else:
         if number == random.choice(possibilities):
-            if f"active-{ctx.guild.id}" in uwu_array:
-                await ctx.reply(f"Pawabéns!!11 Você acewtou, e ganhou {humanize.intcomma(amount*10)}!")
-            else:
-                await ctx.reply(f"Parabéns! Você acertou, e ganhou {humanize.intcomma(amount*10)}!")
+
+			await ctx.reply(f"Parabéns! Você acertou, e ganhou {humanize.intcomma(amount*10)}!")
             increase_coins(ctx.author.id, amount*10)
         else:
-            if f"active-{ctx.guild.id}" in uwu_array:
-                await ctx.reply(f"Poxa!!11 Você pewdeu  {humanize.intcomma(amount)}...")
-            else:
-                await ctx.reply(f"Poxa! Você perdeu {humanize.intcomma(amount)}...")
+
+			await ctx.reply(f"Poxa! Você perdeu {humanize.intcomma(amount)}...")
             decrease_coins(ctx.author.id, amount)
 
 
@@ -1553,41 +1501,30 @@ async def aposta(ctx, amount: int, user: discord.Member):
     blah = user
     checkprofile(ctx.author.id)
     if ctx.author in rinha_cooldown:
-        if f"active-{ctx.guild.id}" in uwu_array:
-            await ctx.send("opaaa ÚwÚ pewa *cries* w-wá, você já apostou. Espewe m-mais um tempo pawa pegaw nyovamente. *sweats* (Dica: Você pode puwaw esse coowdown compwando o benyefício 2 nya d$wojinha)")
-        else:
-            await ctx.send("Opaaa pera lá, você já apostou. Espere o cooldown acabar. (Dica: Você pode pular esse cooldown comprando o benefício 2 na d$lojinha)")
+
+		await ctx.send("Opaaa pera lá, você já apostou. Espere o cooldown acabar. (Dica: Você pode pular esse cooldown comprando o benefício 2 na d$lojinha)")
     else:
         if amount == int(open(f"profile/{ctx.author.id}/coins", "r+").read()):
             if Path(f"profile/{ctx.author.id}/conquistas/conquista1.toml").exists() is False:
                 dar_conquistas(ctx.author.id, "1")
                 await ctx.send("**Conquista obtida:** *Eu confio na sorte!*")
         if amount > int(open(f"profile/{ctx.author.id}/coins", "r+").read()):
-            if f"active-{ctx.guild.id}" in uwu_array:
-                await ctx.send("Você não tem fundos o s-suficiente pwa apostaw UWU (Dica UWU: d$comprar)")
-            else:
-                await ctx.send("Você não tem fundos o suficiente pra apostar. (Dica: d$comprar)")
-            if amount < 0:
-                await ctx.send("Você não pode apostar um valor negativo ou igual a zero.")
-                return
+			await ctx.send("Você não tem fundos o suficiente pra apostar. (Dica: d$comprar)")
+		if amount < 0:
+			await ctx.send("Você não pode apostar um valor negativo ou igual a zero.")
+			return
         else:
             if user.id == ctx.author.id:
-                if f"active-{ctx.guild.id}" in uwu_array:
-                    await ctx.send("Você não pode apostaw com você mesmo.")
-                else:
-                    await ctx.send("Você não pode apostar com você mesmo.")
+
+				await ctx.send("Você não pode apostar com você mesmo.")
             else:
                 checkprofile(user.id)
                 if amount > int(open(f"profile/{user.id}/coins", "r+").read()):
-                    if f"active-{ctx.guild.id}" in uwu_array:
-                        await ctx.send("me *screeches* pawece que seu o-oponyente não pode cobwiw essa aposta... (Dica UWU: d$comprar)")
-                    else:
-                        await ctx.send("Me parece que seu oponente não pode cobrir essa aposta... (Dica: d$comprar)")
+
+					await ctx.send("Me parece que seu oponente não pode cobrir essa aposta... (Dica: d$comprar)")
                 else:
-                    if f"active-{ctx.guild.id}" in uwu_array:
-                        aposta_message = await ctx.send(f"**Atenção {user.mention}, *screeches* o {ctx.author.mention} quew apostaw {humanize.intcomma(amount)} :3 {coin_name} com você. Weaja a esta mensagem com um e-emoji de d-dedão '👍' em 15 segundos pawa concowdaw com a aposta.**")
-                    else:
-                        aposta_message = await ctx.send(f"**Atenção {user.mention}, o {ctx.author.mention} quer apostar {humanize.intcomma(amount)} {coin_name} com você. Reaja a esta mensagem com um emoji de dedão '👍' em 15 segundos para concordar com a aposta.**")
+
+					aposta_message = await ctx.send(f"**Atenção {user.mention}, o {ctx.author.mention} quer apostar {humanize.intcomma(amount)} {coin_name} com você. Reaja a esta mensagem com um emoji de dedão '👍' em 15 segundos para concordar com a aposta.**")
                     await aposta_message.add_reaction('👍')
 
                     def check(reaction, user):
@@ -1595,10 +1532,8 @@ async def aposta(ctx, amount: int, user: discord.Member):
                     try:
                         reaction, user = await bot.wait_for('reaction_add', timeout=15.0, check=check)
                     except asyncio.TimeoutError:
-                        if f"active-{ctx.guild.id}" in uwu_array:
-                            await ctx.send("Aposta c-cancewada UWU")
-                        else:
-                            await ctx.send("Aposta cancelada")
+ 
+						await ctx.send("Aposta cancelada")
                     else:
                         things = ["win", "lose"]
                         resultado = random.choice(things)
@@ -1606,10 +1541,8 @@ async def aposta(ctx, amount: int, user: discord.Member):
                         # The first thing you will think of doing is removing those useless variables, but here is the catch: It doesn't work without them.
                         # The code has a absolutely stroke, so I don't reccoment changing anything here.
                         if resultado == 'win':
-                            if f"active-{ctx.guild.id}" in uwu_array:
-                                await aposta_message.edit(content=f"O Ganhadow foi...\n{ctx.author.mention}!!11 Pawabéns, você ganhou {humanize.intcomma(amount)} :3 {coin_name}?!?1")
-                            else:
-                                await aposta_message.edit(content=f"O Ganhador foi...\n{ctx.author.mention}! Parabéns, você ganhou {humanize.intcomma(amount)} {coin_name}!")
+
+							await aposta_message.edit(content=f"O Ganhador foi...\n{ctx.author.mention}! Parabéns, você ganhou {humanize.intcomma(amount)} {coin_name}!")
                             increase_coins(ctx.author.id, amount)
                             decrease_coins(user.id, amount)
                             current_duels_user = open(f"profile/{ctx.author.id}/duelos", "r+").read()
@@ -1618,10 +1551,8 @@ async def aposta(ctx, amount: int, user: discord.Member):
                                 f.write(str(new_duels_user))
 
                         else:
-                            if f"active-{ctx.guild.id}" in uwu_array:
-                                await aposta_message.edit(content=f"O Ganhadow foi...\n{user.mention}!!11 Pawabéns, você ganhou {humanize.intcomma(amount)} :3 {coin_name}?!?1")
-                            else:
-                                await aposta_message.edit(content=f"O Ganhador foi...\n{user.mention}! Parabéns, você ganhou {humanize.intcomma(amount)} {coin_name}!")
+
+							await aposta_message.edit(content=f"O Ganhador foi...\n{user.mention}! Parabéns, você ganhou {humanize.intcomma(amount)} {coin_name}!")
                             increase_coins(user.id, amount)
                             decrease_coins(ctx.author.id, amount)
                             current_duels_user = open(f"profile/{user.id}/duelos", "r+").read()
@@ -1643,28 +1574,20 @@ async def duelo(ctx, user: discord.Member):
     blah = user
     checkprofile(ctx.author.id)
     if ctx.channel.id == 1164700096668114975:
-        if f"active-{ctx.guild.id}" in uwu_array:
-            await ctx.send("O Tiwan- digo, ADM do Sewvew mandou tiwaw esse comando do G-Gewaw. Foi maw?!?1")
-        else:
-            await ctx.send("O Tiran- digo, ADM do Server mandou tirar esse comando do Geral. Foi mal!")
+
+		await ctx.send("O Tiran- digo, ADM do Server mandou tirar esse comando do Geral. Foi mal!")
     else:
         if ctx.author in rinha_cooldown:
-            if f"active-{ctx.guild.id}" in uwu_array:
-                await ctx.send("opaaa ÚwÚ pewa *cries* w-wá, você já duelou. Espewe m-mais um tempo pawa pegaw nyovamente. *sweats* (Dica: Você pode puwaw esse coowdown compwando o benyefício 2 nya d$lojinha)")
-            else:
-                await ctx.send("Opaaa pera lá, você já duelou. Espere o cooldown acabar. (Dica: Você pode pular esse cooldown comprando o benefício 2 na d$lojinha)")
+
+			await ctx.send("Opaaa pera lá, você já duelou. Espere o cooldown acabar. (Dica: Você pode pular esse cooldown comprando o benefício 2 na d$lojinha)")
         else:
             if user.id == ctx.author.id:
-                if f"active-{ctx.guild.id}" in uwu_array:
-                    await ctx.send("Você não pode duewaw contwa você mesmo.")
-                else:
-                    await ctx.send("Você não pode duelar contra você mesmo.")
+
+				await ctx.send("Você não pode duelar contra você mesmo.")
             else:
                 checkprofile(user.id)
-                if f"active-{ctx.guild.id}" in uwu_array:
-                    aposta_message = await ctx.send(f"**Atenção {user.mention}, *screeches* o {ctx.author.mention} quew duelaw :3 com você. Weaja a esta mensagem com um e-emoji de e-espada '⚔️' em 15 segundos pawa concowdaw com o d-duelo.**")
-                else:
-                    aposta_message = await ctx.send(f"**Atenção {user.mention}, o {ctx.author.mention} quer duelar com você. Reaja a esta mensagem com um emoji de espada '⚔️' em 15 segundos para concordar com o duelo.**")
+
+				aposta_message = await ctx.send(f"**Atenção {user.mention}, o {ctx.author.mention} quer duelar com você. Reaja a esta mensagem com um emoji de espada '⚔️' em 15 segundos para concordar com o duelo.**")
                 await aposta_message.add_reaction('⚔️')
 
                 def check(reaction, user):
@@ -1673,17 +1596,13 @@ async def duelo(ctx, user: discord.Member):
                 try:
                     reaction, user = await bot.wait_for('reaction_add', timeout=15.0, check=check)
                 except asyncio.TimeoutError:
-                    if f"active-{ctx.guild.id}" in uwu_array:
-                        await ctx.send("Duelo c-cancewada UWU")
-                    else:
-                        await ctx.send("Duelo cancelada")
+
+					await ctx.send("Duelo cancelada")
                 else:
                     resultado = random.choice(["win", "lose"])
                     if resultado == 'win':
-                        if f"active-{ctx.guild.id}" in uwu_array:
-                            await aposta_message.edit(content=f"O Ganhadow foi...\n{ctx.author.mention}!!11 Pawabéns, você ganhou o d-duelo!")
-                        else:
-                            await aposta_message.edit(content=f"O Ganhador foi...\n{ctx.author.mention}! Parabéns, você ganhou duelo!")
+
+						await aposta_message.edit(content=f"O Ganhador foi...\n{ctx.author.mention}! Parabéns, você ganhou duelo!")
                         current_duels_user = open(f"profile/{ctx.author.id}/duelos_vencidos", "r+").read()
                         new_duels_user = int(current_duels_user) + 1
                         with open(f'profile/{ctx.author.id}/duelos_vencidos', 'w') as f:
@@ -1694,10 +1613,8 @@ async def duelo(ctx, user: discord.Member):
                             f.write(str(new_duels_user))
 
                     else:
-                        if f"active-{ctx.guild.id}" in uwu_array:
-                            await aposta_message.edit(content=f"O Ganhadow foi...\n{user.mention}!!11 Pawabéns, você ganhou o d-duelo!")
-                        else:
-                            await aposta_message.edit(content=f"O Ganhador foi...\n{user.mention}! Parabéns, você ganhou o duelo!")
+
+						await aposta_message.edit(content=f"O Ganhador foi...\n{user.mention}! Parabéns, você ganhou o duelo!")
                         current_duels_user = open(f"profile/{user.id}/duelos_vencidos", "r+").read()
                         new_duels_user = int(current_duels_user) + 1
                         with open(f'profile/{user.id}/duelos_vencidos', 'w') as f:
@@ -1773,16 +1690,12 @@ async def casamento_1(ctx: commands.Context, user: discord.Member) -> None:
             if Path(f"profile/{ctx.author.id}/conquistas/conquista3.toml").exists() is False:
                 dar_conquistas(ctx.author.id, "3")
                 await ctx.send("**Conquista obtida:** *Sempre o coadjuvante, nunca o protagonista*")
-            if f"active-{ctx.guild.id}" in uwu_array:
-                await ctx.send(f"Essa pessoa já está casada *screams* com awguém...")
-            else:
-                await ctx.send(f"Essa pessoa já está casada com alguém...")
+
+			await ctx.send(f"Essa pessoa já está casada com alguém...")
         else:
             if Path(f"profile/{ctx.author.id}/casado").is_file() is True:
-                if f"active-{ctx.guild.id}" in uwu_array:
-                    await ctx.send(f"Você já é casado!!11")
-                else:
-                    await ctx.send(f"Você já é casado!")
+
+				await ctx.send(f"Você já é casado!")
                 other = bot.get_user(int(open(f"profile/{ctx.author.id}/casado", "r+").read()))
                 await other.send(f"Não é querendo ser fofoqueiro... mais o {ctx.author.display_name} tentou se casar com outra pessoa... 👀👀👀")
                 if Path(f"profile/{other.id}/conquistas/conquista5.toml").exists() is False:
@@ -1790,14 +1703,10 @@ async def casamento_1(ctx: commands.Context, user: discord.Member) -> None:
                     await other.send("**Conquista obtida:** *Doeu mais em mim do que em você*")
             else:
                 if ctx.author in depression:
-                    if f"active-{ctx.guild.id}" in uwu_array:
-                        await ctx.send(f"Você está em depwessão?!! Espewe m-mais um tempo pawa se casaw...")
-                    else:
-                        await ctx.send(f"Você está em depressão! Espere mais um tempo para se casar...")
-                if f"active-{ctx.guild.id}" in uwu_array:
-                    aposta_message = await ctx.send(f"**Atenção {user.mention}, *screeches* o {ctx.author.mention} gostawia de se c-c-casaw com você. Weaja a essa mensagem com um e-emoji de casamento (💒) pawa concowdaw com a cewimônyia.**")
-                else:
-                    aposta_message = await ctx.send(f"**Atenção {user.mention}, o {ctx.author.mention} gostaria de se casar com você. Reaja a essa mensagem com um emoji de casamento (💒) para concordar com a cerimônia.**")
+
+					await ctx.send(f"Você está em depressão! Espere mais um tempo para se casar...")
+
+				aposta_message = await ctx.send(f"**Atenção {user.mention}, o {ctx.author.mention} gostaria de se casar com você. Reaja a essa mensagem com um emoji de casamento (💒) para concordar com a cerimônia.**")
                 await aposta_message.add_reaction('💒')
 
                 def check(reaction, user):
@@ -1806,10 +1715,8 @@ async def casamento_1(ctx: commands.Context, user: discord.Member) -> None:
                 try:
                     reaction, user = await bot.wait_for('reaction_add', timeout=15.0, check=check)
                 except asyncio.TimeoutError:
-                    if f"active-{ctx.guild.id}" in uwu_array:
-                        await aposta_message.edit(content=f"Casamento cancewado?!?1 {ctx.author.display_name} agowa entwou em depwessão...")
-                    else:
-                        await aposta_message.edit(content=f"Casamento cancelado! {ctx.author.display_name} agora entrou em depressão...")
+
+					await aposta_message.edit(content=f"Casamento cancelado! {ctx.author.display_name} agora entrou em depressão...")
                     if Path(f"profile/{ctx.author.id}/conquistas/conquista7.toml").exists() is False:
                         dar_conquistas(ctx.author.id, "7")
                         await ctx.send("**Conquista obtida:** *Eu te vejo apenas como amigo...*")
@@ -1946,10 +1853,8 @@ async def darpremium(ctx, user: discord.Member):
             new_coins_user = int(float(current_coins_user)) + 100000
             with open(f'profile/{user.id}/coins', 'w') as f:
                 f.write(str(new_coins_user))
-            if 'active' in uwu_array:
-                await ctx.send(f"pawabéns *sweats* {user.mention}, você agowa é pwemium?!! Você já pode a-apwuvitaw todos os benyefícios, e P£ *blushes* 100K já fowam *twerks* twansfewidos pawa s-s-sua conta. Obwigado pow apoiaw o {bot_name}?!?!")
-            else:
-                await ctx.send(f"Parabéns {user.mention}, você agora é premium! Você já pode aproveitar todos os benefícios, e P£ 100K já foram transferidos para sua conta. Obrigado por apoiar o {bot_name}!")
+
+			await ctx.send(f"Parabéns {user.mention}, você agora é premium! Você já pode aproveitar todos os benefícios, e P£ 100K já foram transferidos para sua conta. Obrigado por apoiar o {bot_name}!")
     else:
         await ctx.send("Você não é o ADM...")
 
@@ -1968,6 +1873,9 @@ async def nsfw(ctx: commands.Context) -> None:
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def nsfw_1(ctx, *, tag: str | None = None):
     checkprofile(ctx.author.id)
+	if isinstance(ctx.message.channel, discord.DMChannel):
+		await ctx.reply("Esse comando não está disponível via DM.")
+		return
     async with ctx.typing():
         tag = tag or None
         if tag is not None:
@@ -2014,6 +1922,9 @@ async def nsfw_1(ctx, *, tag: str | None = None):
 @bot.hybrid_command(name="ppp", description="Pego, penso e passo")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def ppp(ctx):
+	if isinstance(ctx.message.channel, discord.DMChannel):
+		await ctx.reply("Esse comando não está disponível via DM.")
+		return
     oldlist = ctx.guild.members
     verycoollist = []
     mention_list = []
@@ -2222,10 +2133,9 @@ async def ship(ctx, pessoa1: str, pessoa2: str):
 async def subornarship(ctx, porcentagem: int, pessoa: discord.User):
     current_xp = int(float(open(f"profile/{ctx.author.id}/coins", "r+").read()))
     if current_xp < 100000:
-        if f"active-{ctx.guild.id}" not in uwu_array:
-            await ctx.reply(f"Ah mais que triste. Você não tem {coin_name} o suficiente. (Você precisa de 100k)")
-        else:
-            await ctx.reply(f"A-Ah, m-mais que twiste!!11 você não tem {coin_name} o suficiente. *looks at you* (Você pwecisa de 100k)")
+
+		await ctx.reply(f"Ah mais que triste. Você não tem {coin_name} o suficiente. (Você precisa de 100k)")
+
         return
     decrease_coins(ctx.author.id, 100000)
     with open(f'ships/<@{ctx.author.id}><@{pessoa.id}>.toml', 'w') as f:
@@ -2319,7 +2229,7 @@ async def onlyjack_2(ctx, member: discord.Member):
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def onlyjack_3(ctx, attachment: discord.Attachment):
     checkonlyjack(ctx.author.id)
-    if attachment.filename.endswith(('.png','.gif','.jpg', '.jpeg')) == False:
+    if attachment.filename.endswith(('.png','.gif','.jpg', '.jpeg')) is False:
         await ctx.reply("O arquivo que você mandou não é um tipo reconhecido pelo discord. (Tipos suportados: png, gif, jpg, jpeg)")
     else:
         current_uploads = int(open(f"profile/{ctx.author.id}/onlyjack/uploads/index", "r+").read())
@@ -2507,12 +2417,12 @@ async def gacha(ctx):
         await ctx.reply("Você já tem uma compra em andamento!")
         return
 
-    if random.choice(range(1,5)) == 3:
+    if random.choice(range(1, 5)) == 3:
         is_m = True
     else:
         is_m = False
 
-    rarity = random.choice(range(1,100))
+    rarity = random.choice(range(1, 100))
     if rarity >= 1 and rarity <= 50:
         if is_m:
             cargo = random.choice(roles.cargos_uma_estrela_m)
@@ -2574,7 +2484,7 @@ async def gacha(ctx):
         preco = ""
         cargo_especial = ""
 
-    the_role = { "is_m": is_m, "preco": preco, "cargo": cargo, "cargo_especial": cargo_especial}
+    the_role = {"is_m": is_m, "preco": preco, "cargo": cargo, "cargo_especial": cargo_especial}
 
     if the_role["is_m"] is True:
         message = f"""**JACKPOT! JACKPOT!**
@@ -2587,6 +2497,7 @@ Este cargo custa {the_role['preco']}! Reaja a mensagem abaixo para obter este ca
     message = await ctx.reply(message)
     await message.add_reaction("🧐")
     gacha_array.append(ctx.author.id)
+
     def amogus(reaction, user):
         return user == ctx.author and str(reaction.emoji) in ["🧐"]
         # This makes sure nobody except the command sender can interact with the "menu"
@@ -2616,7 +2527,6 @@ Este cargo custa {the_role['preco']}! Reaja a mensagem abaixo para obter este ca
                         decrease_coins(ctx.author.id, the_role['preco'])
                         await ctx.author.add_roles(ctx.guild.get_role(the_role['cargo_especial']['ID']))
                     await ctx.send(f"Você ganhou o cargo {the_role['cargo']['nome']}")
-
 
                     break
 
@@ -2656,7 +2566,7 @@ async def xadrez(ctx, desafiante: discord.Member):
                 return m.author == ctx.author
             while True:
                 try:
-                    msg2 = await bot.wait_for('message',timeout=240, check=sus)
+                    msg2 = await bot.wait_for('message', timeout=240, check=sus)
                 except asyncio.TimeoutError:
                     await ctx.send(f'Partida cancelada, {desafiante.mention} vence.')
                     os.remove(f"{ctx.author.id}{desafiante.id}.png")
@@ -2703,7 +2613,7 @@ async def xadrez(ctx, desafiante: discord.Member):
                 return m.author == desafiante
             while True:
                 try:
-                    msg2 = await bot.wait_for('message',timeout=240, check=amogus)
+                    msg2 = await bot.wait_for('message', timeout=240, check=amogus)
                 except asyncio.TimeoutError:
                     await ctx.send(f'Partida cancelada, {ctx.author.mention} vence.')
                     os.remove(f"{ctx.author.id}{desafiante.id}.png")
@@ -2745,9 +2655,6 @@ async def xadrez(ctx, desafiante: discord.Member):
                 return
             else:
                 await ctx.send(f"É a vez de {ctx.author.mention}", file=file)
-
-
-
 
 
 # bot.remove_command('help')
