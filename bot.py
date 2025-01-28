@@ -33,7 +33,7 @@ import chess.svg
 # AHOOOOOO
 import roles
 
-version = "2.0.2"
+version = "2.0.3"
 
 r34Py = rule34Py()
 
@@ -984,7 +984,7 @@ async def sobre(ctx):
     embed.add_field(name="Tempo Ligado:", value=uptime(), inline=True)
     embed.add_field(name="Comandos Usados:", value=open(f"comandos_usados", "r+").read(), inline=True)
     embed.add_field(name="Perfis disponíveis:", value=f"{len(list)} perfis", inline=False)
-    embed.set_footer(text="Feito por Jocadbz",
+    embed.set_footer(text=f"Feito por Jocadbz - v{version}",
                      icon_url=the_user.display_avatar)
 
     view = BaseView(ctx.author)
@@ -1212,6 +1212,8 @@ async def profile(ctx, rsuser: discord.User | None = None):
     embed.add_field(name="Apostas vencidas",
                     value=f"""{open(f"profile/{user_sent}/duelos", "r+").read()}""",
                     inline=False)
+    if Path(f"profile/{user_sent}/image_url").exists() is True:
+        embed.set_image(url=f"{open(f"profile/{user_sent}/image_url", "r+").read()}")
     embed.add_field(name="Duelos Mortalmente Mortais",
                     value=f"""Ganhou {open(f"profile/{user_sent}/duelos_vencidos", "r+").read()} - Perdeu {open(f"profile/{user_sent}/duelos_perdidos", "r+").read()}""",
                     inline=False)
@@ -1254,6 +1256,19 @@ class Item(str, enum.Enum):
     Item_1 = "1"
     Item_2 = "2"
     Item_3 = "3"
+
+
+@perfil.command(name="upload_image", description="Dê upload em uma imagem para colocar no seu perfil")
+@app_commands.describe(attachment="A imagem que você deseja colocar no seu perfil")
+@commands.cooldown(1, cooldown_command, commands.BucketType.user)
+async def uploadimage(ctx, *, attachment: discord.Attachment):
+    checkprofile(ctx.author.id)
+    if attachment.filename.endswith(('.png', '.gif', '.jpg', '.jpeg')) is False:
+        await ctx.reply("O arquivo que você mandou não é um tipo reconhecido pelo discord. (Tipos suportados: png, gif, jpg, jpeg)")
+    else:
+        with open(f'profile/{ctx.author.id}/image_url', 'w') as f:
+            f.write(attachment.url)
+        await ctx.reply(f"Você fez upload do arquivo {attachment.filename}!", ephemeral=True)
 
 
 # Lojinha
