@@ -40,7 +40,7 @@ r34Py = rule34Py()
 humanize.activate('pt_BR')
 
 bot_name = "Jack Frost"
-coin_name = "Jacktitas"
+coin_name = "Macca"
 
 # Arrays to include people in. For Cooldown, benefits, etc.
 # I mean, we could integrate an Database here so the benefits aren't actually lost, but no one
