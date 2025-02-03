@@ -1213,7 +1213,7 @@ async def profile(ctx, rsuser: discord.User | None = None):
                     value=f"""{open(f"profile/{user_sent}/duelos", "r+").read()}""",
                     inline=False)
     if Path(f"profile/{user_sent}/image_url").exists() is True:
-        embed.set_image(url=f"{open(f"profile/{user_sent}/image_url", "r+").read()}")
+        embed.set_image(url=f"{open(f'profile/{user_sent}/image_url', 'r+').read()}")
     embed.add_field(name="Duelos Mortalmente Mortais",
                     value=f"""Ganhou {open(f"profile/{user_sent}/duelos_vencidos", "r+").read()} - Perdeu {open(f"profile/{user_sent}/duelos_perdidos", "r+").read()}""",
                     inline=False)
