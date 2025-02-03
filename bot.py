@@ -1127,11 +1127,11 @@ async def daily(ctx):
 
     else:
         if Path(f"profile/{ctx.author.id}/premium").exists() is True:
-            increase_coins(ctx.author.id, 2200)
+            increase_coins(ctx.author.id, 200)
 
             await ctx.reply(f"Você ganhou 2200 {coin_name}! (Bônus de Premium)")
         else:
-            increase_coins(ctx.author.id, 1100)
+            increase_coins(ctx.author.id, 100)
 
             await ctx.reply(f"Você ganhou 1100 {coin_name}!")
         daily_cooldown.append(ctx.author)
@@ -1429,7 +1429,7 @@ async def investir(ctx, arg1: int) -> None:
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def roleta(ctx):
     checkprofile(ctx.author.id)
-    roleta_random = [1100, 110, 150, 1200, 0, 1100, 110, 110, 1400, 1400, 1200, 1200, 1100, 1100, 110, 1200, 0, 0, 1400]
+    roleta_random = [100, 10, 50, 200, 0, 100, 110, 110, 140, 140, 120, 120, 110, 110, 110, 120, 0, 0, 140]
     resultado = random.choice(roleta_random)
 
     if ctx.author in roleta_cooldown:
@@ -1465,7 +1465,7 @@ async def doar(ctx, amount: int, user: discord.Member):
                 return
             if ctx.author in bought_four:
                 imposto = 0
-            elif ctx.guild.id == 1207100636278034472:
+            elif 1 == 1:
                 imposto = 0
             else:
                 imposto = round(amount) * 0.05
@@ -1504,7 +1504,7 @@ async def adivinhar(ctx, amount: int, number: int):
         if number == random.choice(possibilities):
 
             await ctx.reply(f"Parabéns! Você acertou, e ganhou {humanize.intcomma(amount*10)}!")
-            increase_coins(ctx.author.id, amount*10)
+            increase_coins(ctx.author.id, amount*5)
         else:
 
             await ctx.reply(f"Poxa! Você perdeu {humanize.intcomma(amount)}...")
