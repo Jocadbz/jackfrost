@@ -1271,6 +1271,18 @@ async def uploadimage(ctx, *, attachment: discord.Attachment):
         await ctx.reply(f"Você fez upload do arquivo {attachment.filename}!", ephemeral=True)
 
 
+@perfil.command(name="remove_image", description="Remova a imagem para colocar no seu perfil")
+@app_commands.describe(attachment="A imagem que você deseja colocar no seu perfil")
+@commands.cooldown(1, cooldown_command, commands.BucketType.user)
+async def uploadimage(ctx, *, attachment: discord.Attachment):
+    checkprofile(ctx.author.id)
+    if Path(f"profile/{ctx.author.id}/image_url").exists() is True:
+        await ctx.reply("Você não tem uma imagem no seu perfil.")
+        return
+    else:
+        os.remove(f"profile/{ctx.author.id}/image_url")
+        await ctx.reply("Imagem removida.")
+
 # Lojinha
 @bot.hybrid_command(name="lojinha", description="Verifique os itens da lojinha")
 @app_commands.describe(arg1="O Item para comprar")
