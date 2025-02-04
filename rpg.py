@@ -220,7 +220,8 @@ class SuperCog(commands.Cog):
         """This is a hybrid command group."""
         await ctx.send("foo")
 
-    @rpg.command(name="status", description="Veja o status do seu personagem")
+
+    @rpg.command(name="news", description="Veja as notícias do RPG")
     async def news(self, ctx: commands.Context):
         checkprofile(ctx.author.id)
         check_rpg(ctx.author.id)
@@ -278,7 +279,7 @@ class SuperCog(commands.Cog):
         await ctx.send(f"Bem vindo ao mundo de Da'at, **{nome}**! Você ganhou 1 espada comum e 1 armadura comum.")
         add_weapon("1.toml", ctx.author.id)
         add_armor("1.toml", ctx.author.id)
-        equip_armor("1.toml", ctx.authot.id)
+        equip_armor("1.toml", ctx.author.id)
         equip_weapon("1.toml", ctx.author.id)
 
 
@@ -315,35 +316,113 @@ class SuperCog(commands.Cog):
                 # Task has completed but wasn't cleaned up
                 del user_sleep_tasks[user_id]
 
-        class Dungeonselect(BaseView):
-            @discord.ui.select(
-                cls=discord.ui.Select,
-                options=[discord.SelectOption(label=f"Nível {i}") for i in os.listdir(f"rpg/dungeons/{level_selected}/")],
-                placeholder="Selecione a Dungeon: ",
-                min_values=1,
-                max_values=1,
-            )
-            async def select(self, interaction: discord.Interaction, select: discord.ui.Select[Menus]) -> None:
-                dungeon_files = os.listdir(f"rpg/dungeons/{level_selected}/")
-                dungeon_names = return_names(level_selected)
-                dungeon_selected = dungeon_files[dungeon_names.index(select.values[0])]
+        # view = Levelselect(ctx.author)
+        # view.message = await ctx.send("Select Menu", view=view)
+        level_array = os.listdir("rpg/dungeons/")
+        index_page = 0
+        embed=discord.Embed(title=f"Nível {level_array[index_page]}", description=f"", color=0x1c71d8)
+        embed.set_footer(text=f"{bot_name}",
+                         icon_url=self.bot.user.display_avatar)
+        embed.set_author(name=f"Página {index_page + 1}/{len(level_array)}:")
+        message = await ctx.send(content="Reaja com '✅' para selecionar o nível.", embed=embed)
+        # getting the message object for editing and reacting
 
-        class Levelselect(BaseView):
-            @discord.ui.select(
-                cls=discord.ui.Select,
-                options=[discord.SelectOption(label=f"Nível {i}") for i in os.listdir("rpg/dungeons/")],
-                placeholder="Selecione o nível:",
-                min_values=1,
-                max_values=1,
-            )
-            async def select(self, interaction: discord.Interaction, select: discord.ui.Select[Menus]) -> None:
-                level_selected = select.values[0].replace("Nível ", "")
-                view = Dungeonselect(ctx.author)
-                view.message = await interaction.response.edit_message("Select Menu", view=view)
+        await message.add_reaction("◀️")
+        await message.add_reaction("▶️")
+        await message.add_reaction("✅")
 
+        def amogus(reaction, user):
+            return user == ctx.author and str(reaction.emoji) in ["◀️", "▶️", "✅"]
+            # This makes sure nobody except the command sender can interact with the "menu"
 
-        view = Levelselect(ctx.author)
-        view.message = await ctx.send("Select Menu", view=view)
+        while True:
+            while True:
+                try:
+                    reaction, user = await self.bot.wait_for("reaction_add", timeout=60, check=amogus)
+                    # waiting for a reaction to be added - times out after x seconds, 60 in this
+                    # example
+
+                    if str(reaction.emoji) == "▶️" and index_page != len(level_array) - 1:
+                        index_page = index_page + 1
+                        embed=discord.Embed(title=f"Nível {level_array[index_page]}", description=f"", color=0x1c71d8)
+                        embed.set_footer(text=f"{bot_name}",
+                                         icon_url=self.bot.user.display_avatar)
+                        embed.set_author(name=f"Página {index_page + 1}/{len(level_array)}:")
+                        await message.edit(embed=embed)
+                        await message.remove_reaction(reaction, user)
+
+                    elif str(reaction.emoji) == "◀️" and index_page != 0:
+                        index_page = index_page - 1
+                        embed=discord.Embed(title=f"Nível {level_array[index_page]}", description=f"", color=0x1c71d8)
+                        embed.set_footer(text=f"{bot_name}",
+                                         icon_url=self.bot.user.display_avatar)
+                        embed.set_author(name=f"Página {index_page + 1}/{len(level_array)}:")
+                        await message.edit(embed=embed)
+                        await message.remove_reaction(reaction, user)
+
+                    elif str(reaction.emoji) == "✅":
+                        level_selected = level_array[index_page]
+                        await message.remove_reaction(reaction, user)
+                        break
+                    else:
+                        await message.remove_reaction(reaction, user)
+                        # removes reactions if the user tries to go forward on the last page or
+                        # backwards on the first page
+                except asyncio.TimeoutError:
+                    await message.edit("Escolha de dungeon cancelada.")
+                    break
+            dungeons_array = os.listdir(f"rpg/dungeons/{level_selected}")
+            dungeons_array = sorted(dungeons_array, key=lambda x: int(x.split('.')[0]))
+            index_page = 0
+            with open(f'rpg/dungeons/{level_selected}/{dungeons_array[index_page]}', 'r') as f:
+                dungeon_idk = toml.load(f)
+            embed=discord.Embed(title=f"{dungeon_idk['dungeon']['name']}", description=f"{dungeon_idk['dungeon']['description']}", color=0x1c71d8)
+            embed.set_footer(text=f"{bot_name}",
+                             icon_url=self.bot.user.display_avatar)
+            embed.set_author(name=f"Página {index_page + 1}/{len(dungeons_array)}:")
+            await message.edit(embed=embed)
+            while True:
+                try:
+                    reaction, user = await self.bot.wait_for("reaction_add", timeout=60, check=amogus)
+                    # waiting for a reaction to be added - times out after x seconds, 60 in this
+                    # example
+
+                    if str(reaction.emoji) == "▶️" and index_page != len(dungeons_array) - 1:
+                        index_page = index_page + 1
+                        with open(f'rpg/dungeons/{level_selected}/{dungeons_array[index_page]}', 'r') as f:
+                            dungeon_idk = toml.load(f)
+                        embed=discord.Embed(title=f"{dungeon_idk['dungeon']['name']}", description=f"{dungeon_idk['dungeon']['description']}", color=0x1c71d8)
+                        embed.set_footer(text=f"{bot_name}",
+                                         icon_url=self.bot.user.display_avatar)
+                        embed.set_author(name=f"Página {index_page + 1}/{len(dungeons_array)}:")
+                        await message.edit(embed=embed)
+                        await message.remove_reaction(reaction, user)
+
+                    elif str(reaction.emoji) == "◀️" and index_page != 0:
+                        index_page = index_page - 1
+                        with open(f'rpg/dungeons/{level_selected}/{dungeons_array[index_page]}', 'r') as f:
+                            dungeon_idk = toml.load(f)
+                        embed=discord.Embed(title=f"{dungeon_idk['dungeon']['name']}", description=f"{dungeon_idk['dungeon']['description']}", color=0x1c71d8)
+                        embed.set_footer(text=f"{bot_name}",
+                                         icon_url=self.bot.user.display_avatar)
+                        embed.set_author(name=f"Página {index_page + 1}/{len(dungeons_array)}:")
+                        await message.edit(embed=embed)
+                        await message.remove_reaction(reaction, user)
+
+                    elif str(reaction.emoji) == "✅":
+                        dungeon_selected = dungeons_array[index_page]
+                        await message.remove_reaction(reaction, user)
+                        break
+                    else:
+                        await message.remove_reaction(reaction, user)
+                        # removes reactions if the user tries to go forward on the last page or
+                        # backwards on the first page
+                except asyncio.TimeoutError:
+                    await message.edit("Escolha de dungeon cancelada.")
+                    break
+            await message.delete()
+            break
+
         with open(f'rpg/dungeons/{level_selected}/{dungeon_selected}', 'r') as f:
             dungeon_idk = toml.load(f)
         duration = dungeon_idk['dungeon']['time']
@@ -410,10 +489,12 @@ class SuperCog(commands.Cog):
                 "duration": duration,
             }
 
-            await aposta_message.edit("A missão começou!", embed=None)
+            await aposta_message.edit(content="A missão começou!")
 
             try:
                 await asyncio.sleep(duration)
+                with open(f'rpg/dungeons/{level_selected}/{dungeon_selected}', 'r') as f:
+                    dungeon_idk = toml.load(f)
                 with open(f'profile/{ctx.author.id}/rpg/equip/weapon.toml', 'r') as f:
                     equipped_weapon = toml.load(f)
                 results_text = []
@@ -441,25 +522,28 @@ class SuperCog(commands.Cog):
                         add_weapon(weapon, ctx.author.id)
                     for armor in dungeon_idk['dungeon']['real_armor_loot']:
                         add_armor(armor, ctx.author.id)
-                    current_xp = int(float(open(f"profile/{user_sent}/rpg/xp", "r+").read()))
-                    did_we_lv_up = calculate_level_up(current_xp, xp_gained, int(float(open(f"profile/{user_sent}/rpg/lv", "r+").read())))
-                    with open(f'profile/{user_sent}/rpg/xp', 'w') as f:
-                        f.write(str(current_xp + xp_gained))
-                    results_text.append(f"XP ganho: {xp_gained}")
-                    if did_we_lv_up is True:
-                        current_lv = int(float(open(f"profile/{user_sent}/rpg/lv", "r+").read()))
-                        with open(f'profile/{user_sent}/rpg/lv', 'w') as f:
-                            f.write(str(current_lv + 1))
-                        results_text.append(f"Novo rank da DHA!: {current_lv + 1}")
-                    if dungeon_idk['dungeon']['loot'] is True:
-                        results_text.append(f"Armas ganhas: {' - '.join(dungeon_idk['dungeon']['fake_weapon_loot'])}")
-                        results_text.append(f"Armaduras ganhas: {' - '.join(dungeon_idk['dungeon']['fake_armor_loot'])}")
 
-                    current_mission = int(float(open(f"profile/{user_sent}/rpg/missions_count", "r+").read()))
-                    with open(f'profile/{user_sent}/rpg/missions_count', 'w') as f:
-                        f.write(str(current_mission + 1))
+                current_xp = int(float(open(f"profile/{user_sent}/rpg/xp", "r+").read()))
+                did_we_lv_up = calculate_level_up(current_xp, xp_gained, int(float(open(f"profile/{user_sent}/rpg/lv", "r+").read())))
+                with open(f'profile/{user_sent}/rpg/xp', 'w') as f:
+                    f.write(str(current_xp + xp_gained))
+                results_text.append(f"XP ganho: {xp_gained}")
+                if did_we_lv_up is True:
+                    current_lv = int(float(open(f"profile/{user_sent}/rpg/lv", "r+").read()))
+                    with open(f'profile/{user_sent}/rpg/lv', 'w') as f:
+                        f.write(str(current_lv + 1))
+                    results_text.append(f"Novo rank da DHA!: {current_lv + 1}")
+                if dungeon_idk['dungeon']['loot'] is True:
+                    results_text.append(f"Armas ganhas: {' - '.join(dungeon_idk['dungeon']['fake_weapon_loot'])}")
+                    results_text.append(f"Armaduras ganhas: {' - '.join(dungeon_idk['dungeon']['fake_armor_loot'])}")
 
-                await ctx.send(f"Sua quest terminou, {ctx.author.mention}!\nResultados:\n{'\n'.join(results_text)}")
+                current_mission = int(float(open(f"profile/{user_sent}/rpg/missions_count", "r+").read()))
+                with open(f'profile/{user_sent}/rpg/missions_count', 'w') as f:
+                    f.write(str(current_mission + 1))
+
+                await ctx.send(f"""Sua quest terminou, {ctx.author.mention}!
+Resultados:
+{' - '.join(results_text)}""")
 
             finally:
                 # Cleanup the task after completion
@@ -489,16 +573,14 @@ class SuperCog(commands.Cog):
         if Path(f"profile/{ctx.author.id}/rpg/name").exists() is False:
             await ctx.reply("Você não se registrou ainda. Faça isso com `/rpg register <nome do seu personagem>`")
             return
-        weapons_list = os.listdir(f'profile/{ctx.author.id}/rpg/items/weapons/')
-        final_list = {}
-        for weapon in weapons_list:
-            with open(f'profile/{ctx.author.id}/rpg/items/weapons/{weapon}', 'r') as f:
-                weapon = toml.load(f)
-            final_list[weapon] = {'name': weapon['item']['name'], 'description': weapon['item']['description'], 'effect': weapon['item']['effect'], 'og_name': weapon}
-
         index_page = 0
-        embed=discord.Embed(title=f"{final_list[weapons_list[index_page]]['name']}", description=f"{final_list[weapons_list[index_page]]['description']}", color=0x1c71d8)
-        embed.add_field(name="Efeito", value=f"{final_list[weapons_list[index_page]]['effect']}", inline=True)
+        weapons_list = os.listdir(f'profile/{ctx.author.id}/rpg/items/weapons/')
+        with open(f'profile/{ctx.author.id}/rpg/items/weapons/{weapons_list[index_page]}', 'r') as f:
+            weapon = toml.load(f)
+
+
+        embed=discord.Embed(title=f"{weapon['item']['name']}", description=f"{weapon['item']['description']}", color=0x1c71d8)
+        embed.add_field(name="Efeito", value=f"{weapon['item']['effect']}", inline=True)
         embed.set_footer(text=f"{bot_name}",
                          icon_url=self.bot.user.display_avatar)
         embed.set_author(name=f"Página {index_page + 1}/{len(weapons_list)}:")
@@ -522,8 +604,12 @@ class SuperCog(commands.Cog):
 
                 if str(reaction.emoji) == "▶️" and index_page != len(weapons_list) - 1:
                     index_page = index_page + 1
-                    embed=discord.Embed(title=f"{final_list[weapons_list[index_page]]['name']}", description=f"{final_list[weapons_list[index_page]]['description']}", color=0x1c71d8)
-                    embed.add_field(name="Efeito", value=f"{final_list[weapons_list[index_page]]['effect']}", inline=True)
+                    with open(f'profile/{ctx.author.id}/rpg/items/weapons/{weapons_list[index_page]}', 'r') as f:
+                        weapon = toml.load(f)
+
+
+                    embed=discord.Embed(title=f"{weapon['item']['name']}", description=f"{weapon['item']['description']}", color=0x1c71d8)
+                    embed.add_field(name="Efeito", value=f"{weapon['item']['effect']}", inline=True)
                     embed.set_footer(text=f"{bot_name}",
                                      icon_url=self.bot.user.display_avatar)
                     embed.set_author(name=f"Página {index_page + 1}/{len(weapons_list)}:")
@@ -532,8 +618,12 @@ class SuperCog(commands.Cog):
 
                 elif str(reaction.emoji) == "◀️" and index_page != 0:
                     index_page = index_page - 1
-                    embed=discord.Embed(title=f"{final_list[weapons_list[index_page]]['name']}", description=f"{final_list[weapons_list[index_page]]['description']}", color=0x1c71d8)
-                    embed.add_field(name="Efeito", value=f"{final_list[weapons_list[index_page]]['effect']}", inline=True)
+                    with open(f'profile/{ctx.author.id}/rpg/items/weapons/{weapons_list[index_page]}', 'r') as f:
+                        weapon = toml.load(f)
+
+
+                    embed=discord.Embed(title=f"{weapon['item']['name']}", description=f"{weapon['item']['description']}", color=0x1c71d8)
+                    embed.add_field(name="Efeito", value=f"{weapon['item']['effect']}", inline=True)
                     embed.set_footer(text=f"{bot_name}",
                                      icon_url=self.bot.user.display_avatar)
                     embed.set_author(name=f"Página {index_page + 1}/{len(weapons_list)}:")
@@ -541,9 +631,10 @@ class SuperCog(commands.Cog):
                     await message.remove_reaction(reaction, user)
 
                 elif str(reaction.emoji) == "✅":
-                    await message.edit(content=f"Você equipou {final_list[weapons_list[index_page]]['name']}", embed=None)
+                    await ctx.send(content=f"Você equipou {weapon['item']['name']}", embed=None)
                     equip_weapon(weapons_list[index_page], ctx.author.id)
-                    await message.remove_reaction(reaction, user)
+                    await message.delete()
+                    break
                 else:
                     await message.remove_reaction(reaction, user)
                     # removes reactions if the user tries to go forward on the last page or
@@ -574,15 +665,13 @@ class SuperCog(commands.Cog):
             await ctx.reply("Você não se registrou ainda. Faça isso com `/rpg register <nome do seu personagem>`")
             return
         weapons_list = os.listdir(f'profile/{ctx.author.id}/rpg/items/armor/')
-        final_list = {}
-        for weapon in weapons_list:
-            with open(f'profile/{ctx.author.id}/rpg/items/armor/{weapon}', 'r') as f:
-                weapon = toml.load(f)
-            final_list[weapon] = {'name': weapon['item']['name'], 'description': weapon['item']['description'], 'effect': weapon['item']['effect'], 'og_name': weapon}
-
         index_page = 0
-        embed=discord.Embed(title=f"{final_list[weapons_list[index_page]]['name']}", description=f"{final_list[weapons_list[index_page]]['description']}", color=0x1c71d8)
-        embed.add_field(name="Efeito", value=f"{final_list[weapons_list[index_page]]['effect']}", inline=True)
+        with open(f'profile/{ctx.author.id}/rpg/items/armor/{weapons_list[index_page]}', 'r') as f:
+            weapon = toml.load(f)
+
+
+        embed=discord.Embed(title=f"{weapon['item']['name']}", description=f"{weapon['item']['description']}", color=0x1c71d8)
+        embed.add_field(name="Efeito", value=f"{weapon['item']['effect']}", inline=True)
         embed.set_footer(text=f"{bot_name}",
                          icon_url=self.bot.user.display_avatar)
         embed.set_author(name=f"Página {index_page + 1}/{len(weapons_list)}:")
@@ -606,8 +695,12 @@ class SuperCog(commands.Cog):
 
                 if str(reaction.emoji) == "▶️" and index_page != len(weapons_list) - 1:
                     index_page = index_page + 1
-                    embed=discord.Embed(title=f"{final_list[weapons_list[index_page]]['name']}", description=f"{final_list[weapons_list[index_page]]['description']}", color=0x1c71d8)
-                    embed.add_field(name="Efeito", value=f"{final_list[weapons_list[index_page]]['effect']}", inline=True)
+                    with open(f'profile/{ctx.author.id}/rpg/items/armor/{weapons_list[index_page]}', 'r') as f:
+                        weapon = toml.load(f)
+
+
+                    embed=discord.Embed(title=f"{weapon['item']['name']}", description=f"{weapon['item']['description']}", color=0x1c71d8)
+                    embed.add_field(name="Efeito", value=f"{weapon['item']['effect']}", inline=True)
                     embed.set_footer(text=f"{bot_name}",
                                      icon_url=self.bot.user.display_avatar)
                     embed.set_author(name=f"Página {index_page + 1}/{len(weapons_list)}:")
@@ -616,8 +709,12 @@ class SuperCog(commands.Cog):
 
                 elif str(reaction.emoji) == "◀️" and index_page != 0:
                     index_page = index_page - 1
-                    embed=discord.Embed(title=f"{final_list[weapons_list[index_page]]['name']}", description=f"{final_list[weapons_list[index_page]]['description']}", color=0x1c71d8)
-                    embed.add_field(name="Efeito", value=f"{final_list[weapons_list[index_page]]['effect']}", inline=True)
+                    with open(f'profile/{ctx.author.id}/rpg/items/armor/{weapons_list[index_page]}', 'r') as f:
+                        weapon = toml.load(f)
+
+
+                    embed=discord.Embed(title=f"{weapon['item']['name']}", description=f"{weapon['item']['description']}", color=0x1c71d8)
+                    embed.add_field(name="Efeito", value=f"{weapon['item']['effect']}", inline=True)
                     embed.set_footer(text=f"{bot_name}",
                                      icon_url=self.bot.user.display_avatar)
                     embed.set_author(name=f"Página {index_page + 1}/{len(weapons_list)}:")
@@ -625,9 +722,10 @@ class SuperCog(commands.Cog):
                     await message.remove_reaction(reaction, user)
 
                 elif str(reaction.emoji) == "✅":
-                    await message.edit(content=f"Você equipou {final_list[weapons_list[index_page]]['name']}", embed=None)
+                    await ctx.send(content=f"Você equipou {weapon['item']['name']}", embed=None)
                     equip_armor(weapons_list[index_page], ctx.author.id)
-                    await message.remove_reaction(reaction, user)
+                    await message.delete()
+                    break
                 else:
                     await message.remove_reaction(reaction, user)
                     # removes reactions if the user tries to go forward on the last page or
@@ -643,9 +741,15 @@ class SuperCog(commands.Cog):
         check_rpg(ctx.author.id)
         await check_for_news(ctx)
         if Path(f"profile/{ctx.author.id}/rpg/guild/name").exists() is True:
+            members_array = os.listdir(f'profile/{ctx.author.id}/rpg/guild/members/')
+            new_members_array = []
+            for member in members_array:
+                with open(f'profile/{ctx.author.id}/rpg/guild/members/{member}', 'r') as f:
+                    temp_guild_member = toml.load(f)
+                new_members_array.append(self.bot.get_user(int(temp_guild_member['member']['id'])).global_name)
             embed=discord.Embed(title=f"{open(f'profile/{ctx.author.id}/rpg/guild/name', 'r+').read()}", description=f"*{open(f'profile/{ctx.author.id}/rpg/guild/mantra', 'r+').read()}*", color=0x1c71d8)
             embed.add_field(name="Líder", value=f"{ctx.author.global_name}", inline=False)
-            embed.add_field(name="Membros", value=f"{os.listdir(f'profile/{ctx.author.id}/rpg/guild/members/')}", inline=True)
+            embed.add_field(name="Membros", value=f"{' - '.join(new_members_array)}", inline=True)
             embed.set_footer(text=f"{bot_name}",
                              icon_url=self.bot.user.display_avatar)
             if Path(f"profile/{ctx.author.id}/rpg/guild/championship_winner").exists() is True:
@@ -655,9 +759,15 @@ class SuperCog(commands.Cog):
             with open(f'profile/{ctx.author.id}/rpg/guild.toml', 'r') as f:
                 temp_guild_data = toml.load(f)
             guild_leader = temp_guild_data['guild']['leader_id']
+            members_array = os.listdir(f'profile/{guild_leader}/rpg/guild/members/')
+            new_members_array = []
+            for member in members_array:
+                with open(f'profile/{guild_leader}/rpg/guild/members/{member}', 'r') as f:
+                    temp_guild_member = toml.load(f)
+                new_members_array.append(self.bot.get_user(int(temp_guild_member['member']['id'])).global_name)
             embed=discord.Embed(title=f"{open(f'profile/{guild_leader}/rpg/guild/name', 'r+').read()}", description=f"*{open(f'profile/{guild_leader}/rpg/guild/mantra', 'r+').read()}*", color=0x1c71d8)
             embed.add_field(name="Líder", value=f"{self.bot.get_user(temp_guild_data['guild']['leader_id']).global_name}", inline=False)
-            embed.add_field(name="Membros", value=f"{os.listdir(f'profile/{guild_leader}/rpg/guild/members/')}", inline=True)
+            embed.add_field(name="Membros", value=f"{' - '.join(new_members_array)}", inline=True)
             embed.set_footer(text=f"{bot_name}",
                              icon_url=self.bot.user.display_avatar)
             if Path(f"profile/{guild_leader}/rpg/guild/championship_winner").exists() is True:
@@ -712,9 +822,6 @@ class SuperCog(commands.Cog):
         checkprofile(ctx.author.id)
         check_rpg(ctx.author.id)
         await check_for_news(ctx)
-        if Path(f"profile/{ctx.author.id}/rpg/guild/name").exists() is False or Path(f"profile/{ctx.author.id}/rpg/guild.toml").exists() is False:
-            await ctx.send("Você não faz parte de nenhuma guilda.")
-            return
         if Path(f"profile/{ctx.author.id}/rpg/guild/name").exists() is True:
             guild_name = open(f'profile/{ctx.author.id}/rpg/guild/name', 'r+').read()
             message = await ctx.send(content=f"Você tem certeza que deseja deletar a guilda {guild_name}? Reaja com ✅ para concordar com a exclusão.")
@@ -775,7 +882,7 @@ class SuperCog(commands.Cog):
                     await message.edit("Saída da guilda cancelada.")
                     break
         else:
-            await ctx.send("Hummm... Algo deu errado. Reporte o erro, por favor.")
+            await ctx.send("Você não faz parte de nenhuma guilda.")
             return
 
 
@@ -803,7 +910,7 @@ class SuperCog(commands.Cog):
         await message.add_reaction("✅")
 
         def amogus(reaction, user):
-            return user == ctx.author and str(reaction.emoji) in ["◀️", "▶️", "✅"]
+            return user == user and str(reaction.emoji) in ["◀️", "▶️", "✅"]
             # This makes sure nobody except the command sender can interact with the "menu"
 
         while True:
@@ -820,10 +927,12 @@ id = {user.id}""")
                         f.write(f"""[guild]
 leader_id = {ctx.author.id}""")
                     await message.edit(content="Você se juntou a guilda com sucesso!")
+                    return
                     # removes reactions if the user tries to go forward on the last page or
                     # backwards on the first page
             except asyncio.TimeoutError:
-                await message.edit("Entrada na guilda cancelada.")
+                await message.delete()
+                await ctx.send("Entrada na guilda cancelada.")
                 break
 
         

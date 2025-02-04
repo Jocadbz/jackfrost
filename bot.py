@@ -421,6 +421,7 @@ async def checkpremium():
 async def on_ready():
     print(f'Logged on as {bot.user}!')
     await bot.change_presence(activity=discord.CustomActivity(name=f"{open(f'custom_status', 'r+').read()} | d$help", emoji='👀'))
+    await bot.load_extension("rpg")
     await checkpremium.start()
 
 
@@ -590,7 +591,8 @@ async def on_command_error(ctx, error):
         await ctx.reply("Oops! Infelizmente aconteceu um erro no comando :(")
         embed = discord.Embed(title=':x: Command Event Error', colour=0xe64c3c)
         embed.add_field(name='Event', value=error)
-        embed.description = '```py\n%s\n```' % traceback.format_exc()
+        traceback_str = ''.join(traceback.format_exception(type(error), error, error.__traceback__))
+        embed.description = '```py\n%s\n```' % traceback_str
         embed.timestamp = datetime.datetime.now()
         webhook = discord.SyncWebhook.from_url(open(f"webhook_url", "r+").read())
         webhook.send(embed=embed)
@@ -633,6 +635,33 @@ async def on_member_join(member):
 ####################################################################################
 # COMANDOS DE ADMINISTRADOR
 ####################################################################################
+
+
+@bot.command()
+async def load(ctx: commands.Context, extension: str):
+    if ctx.author.id != 727194765610713138:
+        await ctx.reply("Esse comando não existe. Desculpe!")
+        return
+    await bot.load_extension(f"{extension}")
+    await ctx.send(f"Loaded {extension}!")
+
+
+@bot.command()
+async def reload(ctx: commands.Context, extension: str):
+    if ctx.author.id != 727194765610713138:
+        await ctx.reply("Esse comando não existe. Desculpe!")
+        return
+    await bot.reload_extension(f"{extension}")
+    await ctx.send(f"Reloaded {extension}!")
+
+
+@bot.command()
+async def unload(ctx: commands.Context, extension: str):
+    if ctx.author.id != 727194765610713138:
+        await ctx.reply("Esse comando não existe. Desculpe!")
+        return
+    await bot.unload_extension(f"{extension}")
+    await ctx.send(f"Unloaded {extension}!")
 
 
 @bot.hybrid_command(name="habilitarlvup", description="Habilite as mensagens de Level Up")
@@ -722,6 +751,17 @@ async def sync(ctx):
     else:
         await ctx.send("Esse comando não existe. Desculpe!")
 
+@bot.command(hidden=True)
+@commands.cooldown(1, cooldown_command, commands.BucketType.user)
+async def new_news(ctx):
+    if ctx.author.id == 727194765610713138:
+        members_list = os.listdir("profile/")
+        for member in members_list:
+            if Path(f"profile/{ctx.author.id}/rpg").exists() is True:
+                with open(f'profile/{ctx.author.id}/rpg/didnt_saw_news', 'w') as f:
+                    f.write("SEE NEWS")
+    else:
+        await ctx.send("Esse comando não existe. Desculpe!")
 
 @bot.command(hidden=True)
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
@@ -1129,11 +1169,11 @@ async def daily(ctx):
         if Path(f"profile/{ctx.author.id}/premium").exists() is True:
             increase_coins(ctx.author.id, 200)
 
-            await ctx.reply(f"Você ganhou 2200 {coin_name}! (Bônus de Premium)")
+            await ctx.reply(f"Você ganhou 200 {coin_name}! (Bônus de Premium)")
         else:
             increase_coins(ctx.author.id, 100)
 
-            await ctx.reply(f"Você ganhou 1100 {coin_name}!")
+            await ctx.reply(f"Você ganhou 100 {coin_name}!")
         daily_cooldown.append(ctx.author)
         await asyncio.sleep(2500)
         daily_cooldown.remove(ctx.author)
@@ -1539,6 +1579,7 @@ async def aposta(ctx, amount: int, user: discord.Member):
                 await ctx.send("**Conquista obtida:** *Eu confio na sorte!*")
         if amount > int(open(f"profile/{ctx.author.id}/coins", "r+").read()):
             await ctx.send("Você não tem fundos o suficiente pra apostar. (Dica: d$comprar)")
+            return
         if amount < 0:
             await ctx.send("Você não pode apostar um valor negativo ou igual a zero.")
             return
