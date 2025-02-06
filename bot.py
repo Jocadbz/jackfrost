@@ -1336,9 +1336,9 @@ async def lojinha(ctx, arg1: Item | None = None):
         price_2 = 0
         price_3 = 0
     else:
-        price_1 = 500
-        price_2 = 10000
-        price_3 = 1500
+        price_1 = 200
+        price_2 = 500
+        price_3 = 150
 
     arg1 = arg1 or None
     checkprofile(ctx.author.id)
