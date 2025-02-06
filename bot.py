@@ -33,7 +33,7 @@ import chess.svg
 # AHOOOOOO
 import roles
 
-version = "2.0.3"
+version = "2.1.0"
 
 r34Py = rule34Py()
 
@@ -1167,13 +1167,13 @@ async def daily(ctx):
 
     else:
         if Path(f"profile/{ctx.author.id}/premium").exists() is True:
+            increase_coins(ctx.author.id, 300)
+
+            await ctx.reply(f"Você ganhou 300 {coin_name}! (Bônus de Premium)")
+        else:
             increase_coins(ctx.author.id, 200)
 
-            await ctx.reply(f"Você ganhou 200 {coin_name}! (Bônus de Premium)")
-        else:
-            increase_coins(ctx.author.id, 100)
-
-            await ctx.reply(f"Você ganhou 100 {coin_name}!")
+            await ctx.reply(f"Você ganhou 200 {coin_name}!")
         daily_cooldown.append(ctx.author)
         await asyncio.sleep(2500)
         daily_cooldown.remove(ctx.author)

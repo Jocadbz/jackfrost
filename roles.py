@@ -210,20 +210,20 @@ cargo_especial_cinco_estrelas = {"nome": "P★★★★★", "ID": 1261154117078
 cargo_especial_seis_estrelas = {"nome": "P★★★★★★", "ID": 1261154134619590728}
 cargo_especial_sete_estrelas = {"nome": "P★★★★★★★", "ID": 1261154151610449952}
 
-preco_1 = 2500
-preco_1m = 3750
-preco_2 = 5000
-preco_2m = 7500
-preco_3 = 10000
-preco_3m = 15000
-preco_4 = 15000
-preco_4m = 22500
-preco_5 = 20000
-preco_5m = 30000
-preco_6 = 35000
-preco_6m = 52500
-preco_7 = 50000
-preco_7m = 75000
+preco_1 = 150
+preco_1m = 275
+preco_2 = 400
+preco_2m = 550
+preco_3 = 600
+preco_3m = 650
+preco_4 = 700
+preco_4m = 750
+preco_5 = 800
+preco_5m = 850
+preco_6 = 900
+preco_6m = 950
+preco_7 = 1000
+preco_7m = 1500
 
 def return_random_role():
     # Actually
