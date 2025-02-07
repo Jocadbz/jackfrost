@@ -338,7 +338,7 @@ class SuperCog(commands.Cog):
         while True:
             while True:
                 try:
-                    reaction, user = await self.bot.wait_for("reaction_add", timeout=60, check=amogus)
+                    reaction, user = await self.bot.wait_for("reaction_add", timeout=15, check=amogus)
                     # waiting for a reaction to be added - times out after x seconds, 60 in this
                     # example
 
@@ -376,14 +376,18 @@ class SuperCog(commands.Cog):
             index_page = 0
             with open(f'rpg/dungeons/{level_selected}/{dungeons_array[index_page]}', 'r') as f:
                 dungeon_idk = toml.load(f)
+            duration = dungeon_idk['dungeon']['time']
             embed=discord.Embed(title=f"{dungeon_idk['dungeon']['name']}", description=f"{dungeon_idk['dungeon']['description']}", color=0x1c71d8)
+            embed.add_field(name="Rank da DHA mínimo", value=f"Rank {dungeon_idk['dungeon']['lv_required']}", inline=True)
+            embed.add_field(name="XP Max/Min", value=f"{dungeon_idk['dungeon']['max_xp']}/{dungeon_idk['dungeon']['min_xp']}", inline=True)
+            embed.add_field(name="Tempo de missão", value=humanize.naturaldelta(dt.timedelta(seconds=duration)), inline=True)
             embed.set_footer(text=f"{bot_name}",
                              icon_url=self.bot.user.display_avatar)
             embed.set_author(name=f"Página {index_page + 1}/{len(dungeons_array)}:")
             await message.edit(embed=embed)
             while True:
                 try:
-                    reaction, user = await self.bot.wait_for("reaction_add", timeout=60, check=amogus)
+                    reaction, user = await self.bot.wait_for("reaction_add", timeout=15, check=amogus)
                     # waiting for a reaction to be added - times out after x seconds, 60 in this
                     # example
 
@@ -392,6 +396,9 @@ class SuperCog(commands.Cog):
                         with open(f'rpg/dungeons/{level_selected}/{dungeons_array[index_page]}', 'r') as f:
                             dungeon_idk = toml.load(f)
                         embed=discord.Embed(title=f"{dungeon_idk['dungeon']['name']}", description=f"{dungeon_idk['dungeon']['description']}", color=0x1c71d8)
+                        embed.add_field(name="Rank da DHA mínimo", value=f"Rank {dungeon_idk['dungeon']['lv_required']}", inline=True)
+                        embed.add_field(name="XP Max/Min", value=f"{dungeon_idk['dungeon']['max_xp']}/{dungeon_idk['dungeon']['min_xp']}", inline=True)
+                        embed.add_field(name="Tempo de missão", value=humanize.naturaldelta(dt.timedelta(seconds=duration)), inline=True)
                         embed.set_footer(text=f"{bot_name}",
                                          icon_url=self.bot.user.display_avatar)
                         embed.set_author(name=f"Página {index_page + 1}/{len(dungeons_array)}:")
@@ -403,6 +410,9 @@ class SuperCog(commands.Cog):
                         with open(f'rpg/dungeons/{level_selected}/{dungeons_array[index_page]}', 'r') as f:
                             dungeon_idk = toml.load(f)
                         embed=discord.Embed(title=f"{dungeon_idk['dungeon']['name']}", description=f"{dungeon_idk['dungeon']['description']}", color=0x1c71d8)
+                        embed.add_field(name="Rank da DHA mínimo", value=f"Rank {dungeon_idk['dungeon']['lv_required']}", inline=True)
+                        embed.add_field(name="XP Max/Min", value=f"{dungeon_idk['dungeon']['max_xp']}/{dungeon_idk['dungeon']['min_xp']}", inline=True)
+                        embed.add_field(name="Tempo de missão", value=humanize.naturaldelta(dt.timedelta(seconds=duration)), inline=True)
                         embed.set_footer(text=f"{bot_name}",
                                          icon_url=self.bot.user.display_avatar)
                         embed.set_author(name=f"Página {index_page + 1}/{len(dungeons_array)}:")
@@ -418,8 +428,9 @@ class SuperCog(commands.Cog):
                         # removes reactions if the user tries to go forward on the last page or
                         # backwards on the first page
                 except asyncio.TimeoutError:
-                    await message.edit("Escolha de dungeon cancelada.")
-                    break
+                    await message.delete()
+                    await ctx.send("Escolha de dungeon cancelada.")
+                    return
             await message.delete()
             break
 
@@ -458,7 +469,7 @@ class SuperCog(commands.Cog):
             return user == ctx.author and str(reaction.emoji) == '✅'
 
         try:
-            await self.bot.wait_for('reaction_add', timeout=60.0, check=check)
+            await self.bot.wait_for('reaction_add', timeout=15.0, check=check)
         except asyncio.TimeoutError:
 
             await aposta_message.edit(content="Missão cancelada.", embed=None)
@@ -489,7 +500,7 @@ class SuperCog(commands.Cog):
                 "duration": duration,
             }
 
-            await aposta_message.edit(content="A missão começou!")
+            await aposta_message.edit(content="A missão começou!", embed=None)
 
             try:
                 await asyncio.sleep(duration)
