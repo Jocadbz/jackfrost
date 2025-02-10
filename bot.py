@@ -2581,7 +2581,8 @@ Este cargo custa {the_role['preco']}! Reaja a mensagem abaixo para obter este ca
                         await ctx.send(f"Tem algo bem errado com esse cargo {the_role['cargo']['nome']} ou esse cargo: {the_role['cargo_especial']['ID']}...")
                         return
                     if ctx.guild.get_role(the_role['cargo']['ID']) in ctx.author.roles:
-                        pass
+                        await ctx.send("Você já tem esse cargo.")
+                        return
                     else:
                         await ctx.author.add_roles(ctx.guild.get_role(the_role['cargo']['ID']))
                     if ctx.guild.get_role(the_role['cargo_especial']['ID']) in ctx.author.roles:
