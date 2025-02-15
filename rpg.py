@@ -218,7 +218,7 @@ class SuperCog(commands.Cog):
     @commands.hybrid_group(fallback="rpg")
     async def rpg(self, ctx: commands.Context):
         """This is a hybrid command group."""
-        await ctx.send("foo")
+        await ctx.send("Bem vindo ao RPG do Jack Frost! Insira `/rpg` para ver todos os comandos disponíveis.")
 
 
     @rpg.command(name="news", description="Veja as notícias do RPG")
@@ -369,8 +369,9 @@ class SuperCog(commands.Cog):
                         # removes reactions if the user tries to go forward on the last page or
                         # backwards on the first page
                 except asyncio.TimeoutError:
-                    await message.edit("Escolha de dungeon cancelada.")
-                    break
+                    await message.delete()
+                    await ctx.send("Escolha de dungeon cancelada.")
+                    return
             dungeons_array = os.listdir(f"rpg/dungeons/{level_selected}")
             dungeons_array = sorted(dungeons_array, key=lambda x: int(x.split('.')[0]))
             index_page = 0
