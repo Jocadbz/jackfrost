@@ -211,6 +211,7 @@ def increase_coins(user_sent, amount: int):
     current_xp = int(float(open(f"profile/{user_sent}/coins", "r+").read())) + amount
     with open(f'profile/{user_sent}/coins', 'w') as f:
         f.write(str(int(current_xp)))
+    log_message(f"{user_sent} coins increased to {current_xp}")
 
 
 def decrease_coins(user_sent, amount: int):
@@ -221,6 +222,7 @@ def decrease_coins(user_sent, amount: int):
             f.write("0")
         else:
             f.write(str(int(current_xp)))
+    log_message(f"{user_sent} coins decreased to {current_xp}")
 
 
 # Define function to check for user's folders, pretty useful.
@@ -373,6 +375,11 @@ def increase_punheta(user_sent, amount: int):
     current_xp = int(open(f"profile/{user_sent}/punhetas", "r+").read())
     with open(f'profile/{user_sent}/punhetas', 'w') as f:
         f.write(str(current_xp + amount))
+
+
+def log_message(content):
+    webhook = discord.SyncWebhook.from_url(open(f"log_url", "r+").read())
+    webhook.send(content)
 
 
 # Now This is the bot's code.
@@ -636,6 +643,13 @@ async def on_member_join(member):
 # COMANDOS DE ADMINISTRADOR
 ####################################################################################
 
+@bot.command()
+async def deletecoins(ctx: commands.Context, user: discord.Member, amount: int):
+    if ctx.author.id != 727194765610713138:
+        await ctx.reply("Esse comando não existe. Desculpe!")
+        return
+    decrease_coins(user.id, amount)
+    await ctx.send(f"Removed {amount} from {user.global_name}")
 
 @bot.command()
 async def load(ctx: commands.Context, extension: str):
@@ -2585,11 +2599,12 @@ Este cargo custa {the_role['preco']}! Reaja a mensagem abaixo para obter este ca
                         return
                     else:
                         await ctx.author.add_roles(ctx.guild.get_role(the_role['cargo']['ID']))
-                    if ctx.guild.get_role(the_role['cargo_especial']['ID']) in ctx.author.roles:
-                        pass
-                    else:
-                        decrease_coins(ctx.author.id, the_role['preco'])
-                        await ctx.author.add_roles(ctx.guild.get_role(the_role['cargo_especial']['ID']))
+                        if ctx.guild.get_role(the_role['cargo_especial']['ID']) in ctx.author.roles:
+                            pass
+                        else:
+                            await ctx.author.add_roles(ctx.guild.get_role(the_role['cargo_especial']['ID']))
+
+                    decrease_coins(ctx.author.id, the_role['preco'])
                     await ctx.send(f"Você ganhou o cargo {the_role['cargo']['nome']}")
 
                     break
