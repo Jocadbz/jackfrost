@@ -33,7 +33,7 @@ import chess.svg
 # AHOOOOOO
 import roles
 
-version = "2.1.0"
+version = "3.0.0"
 
 r34Py = rule34Py()
 
