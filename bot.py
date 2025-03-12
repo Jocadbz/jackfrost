@@ -421,6 +421,7 @@ async def checkpremium():
                     shutil.rmtree(f"profile/{profile}/premium")
                     bought_two.remove(bot.get_user(int(profile)))
                     bought_four.remove(bot.get_user(int(profile)))
+                    await bot.get_user(int(profile)).send("Olá! Passando pra informar que seu premium acabou.")
 
 
 # Initiate Bot's log, and define on_message functions.
@@ -428,7 +429,11 @@ async def checkpremium():
 async def on_ready():
     print(f'Logged on as {bot.user}!')
     await bot.change_presence(activity=discord.CustomActivity(name=f"{open(f'custom_status', 'r+').read()} | d$help", emoji='👀'))
-    await bot.load_extension("rpg")
+    if 'rpg' in bot.extensions:
+        # Extension is already loaded, do nothing
+        pass
+    else:
+        await bot.load_extension("rpg")
     await checkpremium.start()
 
 
@@ -594,6 +599,12 @@ async def on_command_error(ctx, error):
         await ctx.reply("Você está em cooldown!")
     elif isinstance(error, discord.ext.commands.errors.BadArgument):
         await ctx.reply("Me parece que você colou o tipo errado de argumento. Tente novamente.")
+    elif isinstance(error, discord.errors.NotFound):
+        # Eu não tenho ideia se isso aqui vai funcionar, suponho que sim
+        await ctx.reply("Essa interação já foi deletada e você não pode mais interagir com ela. Desculpe!", ephemeral=True)
+    elif isinstance(error, commands.BotMissingPermissions):
+        text_error = "Oops, me parece que eu não tenho permissões o bastante para isso :("
+        await ctx.reply(f"{text_error}\nLista de permissões necessárias: {', '.join(error.missing_permissions)}", ephemeral=True)
     elif isinstance(error, discord.ext.commands.CommandError):
         await ctx.reply("Oops! Infelizmente aconteceu um erro no comando :(")
         embed = discord.Embed(title=':x: Command Event Error', colour=0xe64c3c)
