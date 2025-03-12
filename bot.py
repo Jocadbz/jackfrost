@@ -1156,7 +1156,7 @@ O preço estabelecido é de R$2/Semana (50% OFF!!). Para realizar a compra, cham
                          icon_url=ctx.author.display_avatar.url)
 
         embed.add_field(name="Data",
-                        value=f"Seu premium acaba em {newdate1.strftime('%d/%m')}",
+                        value=f"Seu premium acaba em <t:{int(newdate1.timestamp())}:F>",
                         inline=True)
 
         embed.set_footer(text=f"{bot_name}",
@@ -1185,14 +1185,14 @@ async def ping(ctx):
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def daily(ctx):
     checkprofile(ctx.author.id)
-    if Path(f"profile/{profile}/daily_grabbed").exists() is True:
-        newdate1 = dateutil.parser.parse(open(f"profile/{profile}/daily_grabbed", 'r+'))
-        if newdate1 + relativedelta(days=1) <= datetime.datetime.now():
-            os.remove(f"profile/{profile}/daily_grabbed")
+    if Path(f"profile/{ctx.author.id}/daily_grabbed").exists() is True:
+        newdate1 = dateutil.parser.parse(open(f"profile/{ctx.author.id}/daily_grabbed", 'r+'))
+        if newdate1 + relativedelta(hours=24) <= datetime.datetime.now():
+            os.remove(f"profile/{ctx.author.id}/daily_grabbed")
             # Nothing to do, removes and continues the operation
         else:
             timestamped_date = newdate1 + relativedelta(days=1)
-            await ctx.send(f"Opaaa pera lá, você já pegou seus {coin_name} diários. Espere até <t:{timestamped_date.timestamp()}:f> para pegar novamente. (Dica: d$comprar)")
+            await ctx.send(f"Opaaa pera lá, você já pegou seus {coin_name} diários. Espere até <t:{int(timestamped_date.timestamp())}:f> para pegar novamente. (Dica: d$comprar)")
             return
 
     if Path(f"profile/{ctx.author.id}/premium").exists() is True:
@@ -1203,8 +1203,8 @@ async def daily(ctx):
         increase_coins(ctx.author.id, 1200)
 
         await ctx.reply(f"Você ganhou 1200 {coin_name}!")
-    current_date = datetime.date.today()
-    with open(f'profile/{user.id}/daily_grabbed', 'w') as f:
+    current_date = datetime.datetime.now()
+    with open(f'profile/{ctx.author.id}/daily_grabbed', 'w') as f:
         f.write(current_date.isoformat())
 
 
@@ -1945,7 +1945,7 @@ async def darpremium(ctx, user: discord.Member):
             await ctx.send("Pô ADM, ele já é Premium...")
         else:
             os.makedirs(f"profile/{user.id}/premium")
-            current_date = datetime.date.today()
+            current_date = datetime.datetime.now()
             with open(f'profile/{user.id}/premium/date', 'w') as f:
                 f.write(current_date.isoformat())
             current_coins_user = open(f"profile/{user.id}/coins", "r+").read()
