@@ -423,7 +423,6 @@ async def checkpremium():
                     bought_four.remove(bot.get_user(int(profile)))
                     await bot.get_user(int(profile)).send("Olá! Passando pra informar que seu premium acabou.")
 
-
 # Initiate Bot's log, and define on_message functions.
 @bot.event
 async def on_ready():
@@ -1186,22 +1185,27 @@ async def ping(ctx):
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def daily(ctx):
     checkprofile(ctx.author.id)
-
-    if ctx.author in daily_cooldown:
-        await ctx.send(f"Opaaa pera lá, você já pegou seus {coin_name} diários. Espere mais um tempo para pegar novamente. (Dica: d$comprar)")
-
-    else:
-        if Path(f"profile/{ctx.author.id}/premium").exists() is True:
-            increase_coins(ctx.author.id, 300)
-
-            await ctx.reply(f"Você ganhou 300 {coin_name}! (Bônus de Premium)")
+    if Path(f"profile/{profile}/daily_grabbed").exists() is True:
+        newdate1 = dateutil.parser.parse(open(f"profile/{profile}/daily_grabbed", 'r+'))
+        if newdate1 + relativedelta(days=1) <= datetime.datetime.now():
+            os.remove(f"profile/{profile}/daily_grabbed")
+            # Nothing to do, removes and continues the operation
         else:
-            increase_coins(ctx.author.id, 200)
+            timestamped_date = newdate1 + relativedelta(days=1)
+            await ctx.send(f"Opaaa pera lá, você já pegou seus {coin_name} diários. Espere até <t:{timestamped_date.timestamp()}:f> para pegar novamente. (Dica: d$comprar)")
+            return
 
-            await ctx.reply(f"Você ganhou 200 {coin_name}!")
-        daily_cooldown.append(ctx.author)
-        await asyncio.sleep(2500)
-        daily_cooldown.remove(ctx.author)
+    if Path(f"profile/{ctx.author.id}/premium").exists() is True:
+        increase_coins(ctx.author.id, 1300)
+
+        await ctx.reply(f"Você ganhou 1300 {coin_name}! (Bônus de Premium)")
+    else:
+        increase_coins(ctx.author.id, 1200)
+
+        await ctx.reply(f"Você ganhou 1200 {coin_name}!")
+    current_date = datetime.date.today()
+    with open(f'profile/{user.id}/daily_grabbed', 'w') as f:
+        f.write(current_date.isoformat())
 
 
 @bot.hybrid_group(fallback="ajuda")
