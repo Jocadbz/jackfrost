@@ -433,7 +433,11 @@ async def on_ready():
         pass
     else:
         await bot.load_extension("rpg")
-    await checkpremium.start()
+    try:
+        await checkpremium.start()
+    except RuntimeError:
+        # I'm assuming here that the only error we will get is that runtime error because of the task
+        pass # do nothing
 
 
 def setup_experience(message):
