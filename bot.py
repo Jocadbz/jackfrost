@@ -2606,7 +2606,7 @@ Este cargo custa {the_role['preco']}! Reaja a mensagem abaixo para obter este ca
                     await ctx.send("Você não tem os recursos necessarios para comprar este cargo. Compra cancelada.")
                     return
                 else:
-                    if type(the_role['cargo_especial']['ID']) is None or type(the_role['cargo']['ID']) is None:
+                    if the_role['cargo_especial']['ID'] == None or the_role['cargo']['ID']) == None:
                         await ctx.send(f"Tem algo bem errado com esse cargo {the_role['cargo']['nome']} ou esse cargo: {the_role['cargo_especial']['ID']}...")
                         return
                     if ctx.guild.get_role(the_role['cargo']['ID']) in ctx.author.roles:
