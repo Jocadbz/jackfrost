@@ -32,6 +32,7 @@ import chess
 import chess.svg
 # AHOOOOOO
 import roles
+from openai import OpenAI
 
 version = "3.0.0"
 
@@ -250,6 +251,14 @@ def checkprofile(user_sent):
     if Path(f"profile/{user_sent}/punhetas").exists() is False:
         with open(f'profile/{user_sent}/punhetas', 'w') as f:
             f.write("0")
+    # AI stuff. huhhhhhh probably need better handling ngl.
+    if Path(f"profile/{user_sent}/ai_message_count").exists() is False:
+        with open(f'profile/{user_sent}/ai_message_count', 'w') as f:
+            f.write("0")
+    # Context window for messages. I will have to handle trimming more easily once these get big.
+    if Path(f"profile/{user_sent}/ai_message_context").exists() is False:
+        with open(f'profile/{user_sent}/ai_message_context', 'w') as f:
+            f.write("")
 
 
 def checkonlyjack(user_sent):
@@ -2497,10 +2506,39 @@ async def images(ctx, *, sobre_mim: str):
 @app_commands.describe(prompt="Seu prompt")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def jackgpt(ctx, *, prompt: str):
-    #prompt = f"Finja ser um bot do discord chamado Jack Frost, personagem da franquia Persona e Shin megami tensei. Sabendo disso, responda a seguinte pergunta: {prompt}"
-    #results = await AsyncDDGS().achat(prompt)
-    #await ctx.reply(f"{results}")
-    await ctx.reply("Pedimos desculpas pelo incoveniente, mas este commando está em manutenção.")
+    checkprofile(ctx.author.id)
+    if os.path.exists(f"profile/{ctx.author.id}/premium") is False and int(open(f'xai-key', 'r+').read("profile/{ctx.author.id}/ai_message_count")) >= 10:
+        await ctx.reply("Sinto muito, mas você já atingiu o limite de mensagens disponíveis. Compre o premium para obter mais!")
+        return
+        
+    XAI_API_KEY = open(f'xai-key', 'r+').read()
+    client = OpenAI(
+        api_key=XAI_API_KEY,
+        base_url="https://api.x.ai/v1",
+    )
+    completion = client.chat.completions.create(
+        model="grok-3-mini",
+        messages=[
+            {
+                "role": "system",
+                "content": "Você é o Jack Frost, um bot do discord dedicado a divertir as pessoas. Ajude o usuário com seu problema ou pergunta, não importa o quê."
+            },
+            {
+                "role": "user",
+                "content": prompt
+            },
+        ],
+    )
+    if ctx.interaction:
+        await ctx.interaction.response.defer()
+        await ctx.interaction.followup.send(completion.choices[0].message.content)
+    else:
+        async with ctx.typing():
+            await ctx.reply(completion.choices[0].message.content)
+    
+    newmsgcount = int(open(f'xai-key', 'r+').read("profile/{ctx.author.id}/ai_message_count")) + 1
+    with open(f'profile/{ctx.author.id}/ai_message_count', 'w') as f:
+        f.write(str(newmsgcount))
 
 
 @bot.hybrid_command(name="gacha", description="Sorteie os cargos do server do R1ck! (Exclusivo para nação AntiCLT)")
