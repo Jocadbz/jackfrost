@@ -2497,10 +2497,10 @@ async def images(ctx, *, sobre_mim: str):
 @app_commands.describe(prompt="Seu prompt")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def jackgpt(ctx, *, prompt: str):
-    prompt = f"Finja ser um bot do discord chamado Jack Frost, personagem da franquia Persona e Shin megami tensei. Sabendo disso, responda a seguinte pergunta: {prompt}"
-    results = await AsyncDDGS().achat(prompt)
-    await ctx.reply(f"{results}")
-    # await ctx.reply("Pedimos desculpas pelo incoveniente, mas este commando está em manutenção.")
+    #prompt = f"Finja ser um bot do discord chamado Jack Frost, personagem da franquia Persona e Shin megami tensei. Sabendo disso, responda a seguinte pergunta: {prompt}"
+    #results = await AsyncDDGS().achat(prompt)
+    #await ctx.reply(f"{results}")
+    await ctx.reply("Pedimos desculpas pelo incoveniente, mas este commando está em manutenção.")
 
 
 @bot.hybrid_command(name="gacha", description="Sorteie os cargos do server do R1ck! (Exclusivo para nação AntiCLT)")
