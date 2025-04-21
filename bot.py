@@ -32,7 +32,7 @@ import chess
 import chess.svg
 # AHOOOOOO
 import roles
-from openai import OpenAI
+from openai import AsyncOpenAI
 
 version = "3.0.0"
 
@@ -625,7 +625,10 @@ async def on_command_error(ctx, error):
         embed.description = '```py\n%s\n```' % traceback_str
         embed.timestamp = datetime.datetime.now()
         webhook = discord.SyncWebhook.from_url(open(f"webhook_url", "r+").read())
-        webhook.send(embed=embed)
+        if len(embed.description) > 4096:
+            print(embed.description)
+        else:
+            webhook.send(embed=embed)
 
 
 @bot.event
@@ -2507,36 +2510,40 @@ async def images(ctx, *, sobre_mim: str):
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def jackgpt(ctx, *, prompt: str):
     checkprofile(ctx.author.id)
-    if os.path.exists(f"profile/{ctx.author.id}/premium") is False and int(open(f'xai-key', 'r+').read("profile/{ctx.author.id}/ai_message_count")) >= 10:
+    if os.path.exists(f"profile/{ctx.author.id}/premium") is False and int(open(f"profile/{ctx.author.id}/ai_message_count", 'r+').read()) >= 10:
         await ctx.reply("Sinto muito, mas você já atingiu o limite de mensagens disponíveis. Compre o premium para obter mais!")
         return
-        
+    
+
+    await ctx.defer()
+
     XAI_API_KEY = open(f'xai-key', 'r+').read()
-    client = OpenAI(
+    client = AsyncOpenAI(
         api_key=XAI_API_KEY,
         base_url="https://api.x.ai/v1",
     )
-    completion = client.chat.completions.create(
-        model="grok-3-mini",
-        messages=[
+
+    async def make_api_call_to_gpt(prompt, model="grok-3-mini"):
+        messages = [
             {
                 "role": "system",
-                "content": "Você é o Jack Frost, um bot do discord dedicado a divertir as pessoas. Ajude o usuário com seu problema ou pergunta, não importa o quê."
+                "content": "Você é o Jack Frost, um bot do discord dedicado a divertir as pessoas. Ajude o usuário com seu problema ou pergunta, não importa o quê. Mantenha suas respostas o mais curtas possivel."
             },
             {
                 "role": "user",
                 "content": prompt
             },
-        ],
-    )
-    if ctx.interaction:
-        await ctx.interaction.response.defer()
-        await ctx.interaction.followup.send(completion.choices[0].message.content)
-    else:
-        async with ctx.typing():
-            await ctx.reply(completion.choices[0].message.content)
+        ]
+        response = await client.chat.completions.create(
+            model=model,
+            messages=messages,
+            temperature=0,
+        )
+        return response.choices[0].message.content
+
+    await ctx.reply(await make_api_call_to_gpt(prompt))
     
-    newmsgcount = int(open(f'xai-key', 'r+').read("profile/{ctx.author.id}/ai_message_count")) + 1
+    newmsgcount = int(open(f"profile/{ctx.author.id}/ai_message_count", 'r+').read()) + 1
     with open(f'profile/{ctx.author.id}/ai_message_count', 'w') as f:
         f.write(str(newmsgcount))
 
