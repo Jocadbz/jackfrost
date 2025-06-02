@@ -1359,7 +1359,7 @@ async def uploadimage(ctx, *, attachment: discord.Attachment):
 @perfil.command(name="remove_image", description="Remova a imagem para colocar no seu perfil")
 @app_commands.describe(attachment="A imagem que você deseja colocar no seu perfil")
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
-async def uploadimage(ctx, *, attachment: discord.Attachment):
+async def removeimage(ctx, *, attachment: discord.Attachment):
     checkprofile(ctx.author.id)
     if Path(f"profile/{ctx.author.id}/image_url").exists() is True:
         await ctx.reply("Você não tem uma imagem no seu perfil.")
@@ -2390,7 +2390,7 @@ async def onlyjack_4(ctx):
                 embed.set_author(name=f"Página 1/{posts_index}:")
 
                 message = await ctx.send(embed=embed)
-                message_id = message.id
+                # message_id = message.id
                 # getting the message object for editing and reacting
 
                 await message.add_reaction("◀️")
