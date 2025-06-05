@@ -33,6 +33,7 @@ import chess.svg
 # AHOOOOOO
 import roles
 from openai import AsyncOpenAI
+import multiprocessing
 
 version = "3.0.0"
 
@@ -65,7 +66,34 @@ cooldown_command = 5
 # BANNED USERS
 banned_users = []
 
-# Useful Functions
+
+# Parallel functions
+def recieve_message():
+    # TODO: Not hardcoding this
+    address = ('localhost', 6000)     # family is deduced to be 'AF_INET'
+    listener = multiprocessing.connection.Listener(address, authkey='123') # If hosting this microservice on another location, DO NOT use this key.
+    conn = listener.accept()
+    print('connection accepted from', listener.last_accepted)
+    while True:
+        msg = conn.recv()
+        # This is actually a pretty bad way to do this
+        # I'm not even sure if this will work since I EXPECT
+        # the microservice will send it's message when we are expecting it.
+        if msg is not None:
+            conn.close()
+            return msg
+            break
+    listener.close()
+
+
+def send_request(path_required):
+    address = ('localhost', 6001)
+    conn = multiprocessing.connection.Client(address, authkey='123')
+    conn.send(path_required)
+    conn.close()
+    # now onto recieving the message (I really hope this works.)
+    temp = recieve_message()
+    return temp
 
 
 # Defining our base view
@@ -1353,6 +1381,7 @@ async def uploadimage(ctx, *, attachment: discord.Attachment):
     else:
         with open(f'profile/{ctx.author.id}/image_url', 'w') as f:
             f.write(attachment.url)
+        # await attachment.save(f"profi")
         await ctx.reply(f"Você fez upload do arquivo {attachment.filename}!", ephemeral=True)
 
 
