@@ -2257,7 +2257,7 @@ async def ship(ctx, pessoa1: str, pessoa2: str):
             dar_conquistas(ctx.author.id, "10")
             await ctx.send("**Conquista obtida:** *Vai que dá certo né?*")
 
-    message_content = f"""<:DomPedro2:1170304386321358889>Temos um novo ship na área?<:DomPedro2:1170304386321358889>
+    message_content = f"""❤️Temos um novo ship na área?❤️
 {pessoa1} + {pessoa2}, a probabilidade de vocês darem certo é de... *{the_actual_possibility}%*!
 **{message}**"""
 
