@@ -27,7 +27,6 @@ import cowsay
 import sys
 from rule34Py import rule34Py
 import cunnypy
-from duckduckgo_search import AsyncDDGS
 import chess
 import chess.svg
 # AHOOOOOO
