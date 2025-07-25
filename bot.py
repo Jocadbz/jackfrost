@@ -516,6 +516,9 @@ async def on_message(message):
 
         await bot.get_user(727194765610713138).send(embed=embed)
         await bot.process_commands(message)
+    elif message.content == "<@1167643852786638889>":
+        await message.channel.send(f"Olá! Para me usar, utilize o prefixo `d$` ou os comandos slash `/`!", reference=message)
+        return
     elif "d$" in message.content.lower():
         if Path(f"guilds/{message.guild.id}").exists() is False:
             os.makedirs(f"guilds/{message.guild.id}")
@@ -2541,7 +2544,7 @@ async def jackgpt(ctx, *, prompt: str):
     if os.path.exists(f"profile/{ctx.author.id}/premium") is False and int(open(f"profile/{ctx.author.id}/ai_message_count", 'r+').read()) >= 10:
         await ctx.reply("Sinto muito, mas você já atingiu o limite de mensagens disponíveis. Compre o premium para obter mais!")
         return
-    
+
 
     await ctx.defer()
 
@@ -2570,7 +2573,7 @@ async def jackgpt(ctx, *, prompt: str):
         return response.choices[0].message.content
 
     await ctx.reply(await make_api_call_to_gpt(prompt))
-    
+
     newmsgcount = int(open(f"profile/{ctx.author.id}/ai_message_count", 'r+').read()) + 1
     with open(f'profile/{ctx.author.id}/ai_message_count', 'w') as f:
         f.write(str(newmsgcount))
