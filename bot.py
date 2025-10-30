@@ -278,6 +278,12 @@ def checkprofile(user_sent):
     if Path(f"profile/{user_sent}/punhetas").exists() is False:
         with open(f'profile/{user_sent}/punhetas', 'w') as f:
             f.write("0")
+    if Path(f"profile/{user_sent}/banco").exists() is False:
+        with open(f'profile/{user_sent}/banco', 'w') as f:
+            f.write("0")
+    if Path(f"profile/{user_sent}/bolso").exists() is False:
+        with open(f'profile/{user_sent}/bolso', 'w') as f:
+            f.write("0")
     # AI stuff. huhhhhhh probably need better handling ngl.
     if Path(f"profile/{user_sent}/ai_message_count").exists() is False:
         with open(f'profile/{user_sent}/ai_message_count', 'w') as f:
@@ -2787,6 +2793,13 @@ async def xadrez(ctx, desafiante: discord.Member):
             else:
                 await ctx.send(f"É a vez de {ctx.author.mention}", file=file)
 
+@bot.hybrid_command(name="trabalhar", description="Encare a condução lotada e vá trabalhar")
+@commands.cooldown(1, cooldown_command, commands.BucketType.user)
+async def work(ctx):
+    checkprofile(ctx.author.id)
+    # increase_coins(ctx.author.id, 1300)
+    await ctx.reply(f"Parábens pelo dia de trabalho {ctx.author.mention}, você ganhou **200** Macca. Deseja guardar aonde? (O dinheiro será automaticamente guardado no bolso caso nenhumaa opçãqo seja selecionada.\n ")
+    
 
 # bot.remove_command('help')
 
