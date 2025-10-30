@@ -2,6 +2,7 @@ from __future__ import annotations
 import discord
 import os
 import os.path
+import json
 import random
 import contextlib
 import urllib.request as urllib
@@ -26,17 +27,15 @@ import traceback
 import cowsay
 import sys
 from rule34Py import rule34Py
-import cunnypy
 import chess
 import chess.svg
 # AHOOOOOO
 import roles
 from openai import AsyncOpenAI
 import multiprocessing
+import booru
 
 version = "3.0.0"
-
-r34Py = rule34Py()
 
 humanize.activate('pt_BR')
 
@@ -2022,7 +2021,8 @@ async def nsfw(ctx: commands.Context) -> None:
 
 @nsfw.command(name="hentai", description="Pra Garantir a Famosa Fanheta")
 @app_commands.describe(tag="Tags, separadas por espaços")
-@commands.cooldown(1, cooldown_command, commands.BucketType.user)
+# Gelbooru currently has a shitty limit of 10 requests evevery second, so we increase the limit.
+@commands.cooldown(5, cooldown_command, commands.BucketType.user)
 async def nsfw_1(ctx, *, tag: str | None = None):
     checkprofile(ctx.author.id)
     if isinstance(ctx.message.channel, discord.DMChannel):
@@ -2047,24 +2047,33 @@ async def nsfw_1(ctx, *, tag: str | None = None):
                 dar_conquistas(ctx.author.id, "2")
                 await ctx.send("**Conquista obtida:** *Sem fanheta...*")
             return
-
+        dan = booru.Danbooru()
         if tag is not None:
-            result_random = r34Py.random_post(tag.split(' '))
+            if len(tag.split(' ')) > 2:
+                await ctx.reply("Você não pode inserir mais que duas tags.")
+                return
+            try:
+                result_random = await dan.search(query=tag, gacha=True)
+            except Exception:
+                await ctx.reply("Nenhum resultado encontrado.")
+                return
         else:
-            result_random = r34Py.random_post()
-        if result_random is list:
-            await ctx.reply("Não conseguimos achar nenhum post relacionado com essas tags.")
+            try:
+                result_random = await dan.search(query="", gacha=True) # We do not support a search without a query for some reason.
+            except Exception:
+                await ctx.reply("Nenhum resultado encontrado.") 
+                return
+        data = json.loads(result_random)
+        if data.get("file_ext") == 'mp4' or data.get("file_ext") == 'webm':
+            resultado = data.get("file_url")
+            await ctx.reply(f"NSFW\n{resultado}")
+            increase_punheta(ctx.author.id, 1)
         else:
-            if result_random.image == '':
-                resultado = result_random.video
-                await ctx.reply(f"NSFW\n{resultado}")
-                increase_punheta(ctx.author.id, 1)
-            else:
-                resultado = result_random.image
-                embed = discord.Embed(title="NSFW")
-                embed.set_image(url=resultado)
-                await ctx.reply(embed=embed)
-                increase_punheta(ctx.author.id, 1)
+            resultado = data.get("file_url")
+            embed = discord.Embed(title="NSFW")
+            embed.set_image(url=resultado)
+            await ctx.reply(embed=embed)
+            increase_punheta(ctx.author.id, 1)
 
 
 @bot.hybrid_command(name="ppp", description="Pego, penso e passo")
