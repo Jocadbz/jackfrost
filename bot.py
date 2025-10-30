@@ -2806,8 +2806,59 @@ async def xadrez(ctx, desafiante: discord.Member):
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def work(ctx):
     checkprofile(ctx.author.id)
-    # increase_coins(ctx.author.id, 1300)
-    await ctx.reply(f"Parábens pelo dia de trabalho {ctx.author.mention}, você ganhou **200** Macca. Deseja guardar aonde? (O dinheiro será automaticamente guardado no bolso caso nenhumaa opçãqo seja selecionada.\n ")
+    message = await ctx.reply(f"Parábens pelo dia de trabalho {ctx.author.mention}, você ganhou **200** Macca. Deseja guardar aonde? (O dinheiro será automaticamente guardado no bolso caso nenhuma opção seja selecionada.\n ")
+    # Isso é o pior código que eu já escrevi btw. But gtg
+    def sus(m):
+        return m.author == ctx.author
+
+    try:
+        msg1 = await bot.wait_for('message', check=sus)
+    except asyncio.TimeoutError:
+        await ctx.send('Visualização cancelada. Tente novamente.')
+    else:
+
+        await message.add_reaction("🏦") # Bank
+        await message.add_reaction("💸") # Pocket
+
+        def amogus(reaction, user):
+            return user == ctx.author and str(reaction.emoji) in ["🏦", "💸"]
+            # This makes sure nobody except the command sender can interact with the "menu"
+
+        while True:
+            try:
+                reaction, user = await bot.wait_for("reaction_add", timeout=15, check=amogus)
+                # waiting for a reaction to be added - times out after x seconds, 60 in this
+                # example
+
+                if str(reaction.emoji) == "🏦": # Bank
+                    current_xp = int(float(open(f"profile/{ctx.author.id}/banco", "r+").read())) + 200
+                    with open(f'profile/{ctx.author.id}/banco', 'w') as f:
+                        f.write(str(int(current_xp)))
+                    log_message(f"{ctx.author.id} coins on bank increased to {current_xp}")
+                    await message.edit(f"Dinheiro guardado no banco. Seu total é de {current_xp}")
+                    await message.remove_reaction(reaction, user)
+
+                elif str(reaction.emoji) == "💸": # Bolso
+                    current_xp = int(float(open(f"profile/{ctx.author.id}/bolso", "r+").read())) + 200
+                    with open(f'profile/{ctx.author.id}/bolso', 'w') as f:
+                        f.write(str(int(current_xp)))
+                    log_message(f"{ctx.author.id} coins on pocket increased to {current_xp}")
+                    await message.edit(f"Dinheiro guardado no banco. Seu total é de {current_xp}")
+                    await message.remove_reaction(reaction, user)
+
+                else:
+                    await message.remove_reaction(reaction, user)
+                    # removes reactions if the user tries to go forward on the last page or
+                    # backwards on the first page
+            except asyncio.TimeoutError:
+                current_xp = int(float(open(f"profile/{ctx.author.id}/bolso", "r+").read())) + 200
+                with open(f'profile/{ctx.author.id}/bolso', 'w') as f:
+                    f.write(str(int(current_xp)))
+                log_message(f"{ctx.author.id} coins on pocket increased to {current_xp}")
+                await message.edit(f"Dinheiro guardado no banco. Seu total é de {current_xp}")
+                await message.remove_reaction(reaction, user)
+                break
+                # ending the loop if user doesn't react after x seconds
     
 
 # bot.remove_command('help')
