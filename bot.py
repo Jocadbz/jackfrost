@@ -464,6 +464,50 @@ async def checkpremium():
                     bought_four.remove(bot.get_user(int(profile)))
                     await bot.get_user(int(profile)).send("Olá! Passando pra informar que seu premium acabou.")
 
+
+@tasks.loop(minutes=1440)  # every 30 minutes
+async def daily_bank_tax():
+    for user_folder in os.listdir("profile"):
+        user_id = user_folder
+        balance_path = f"profile/{user_id}/banco"
+
+        if not os.path.isfile(balance_path):
+            continue
+
+        try:
+            # Read balance
+            with open(balance_path, "r") as f:
+                balance = int(f.read().strip())
+
+            # --- NEW RULE: If balance < 1000 → deduct 10 flat ---
+            if balance < 1000:
+                tax = 10
+            else:
+                # 0.07% → 7 per 10,000 (integer only)
+                tax = (balance // 10000) * 7
+
+            # Apply tax (never go below 0)
+            new_balance = max(0, balance - tax)
+
+            # Save new balance
+            with open(balance_path, "w") as f:
+                f.write(str(new_balance))
+
+            # Optional: Notify user
+            if tax > 0:
+                user = bot.get_user(int(user_id))
+                if user:
+                    reason = "abaixo de 1,000 macca" if balance < 1000 else "taxa de 0.07%"
+                    await user.send(
+                        f"Taxa diária do banco\n"
+                        f"Deduzido: **-{tax} Macca** ({reason})\n"
+                        f"Novo saldo: **{new_balance} Macca**"
+                    )
+
+        except (ValueError, PermissionError, OSError):
+            continue
+        
+
 # Initiate Bot's log, and define on_message functions.
 @bot.event
 async def on_ready():
@@ -476,6 +520,7 @@ async def on_ready():
         await bot.load_extension("rpg")
     try:
         await checkpremium.start()
+        await daily_bank_tax.start()
     except RuntimeError:
         # I'm assuming here that the only error we will get is that runtime error because of the task
         pass # do nothing
@@ -2856,7 +2901,7 @@ async def work(ctx):
                     f.write(str(int(current_xp)))
                 log_message(f"{ctx.author.id} coins on pocket increased to {current_xp}")
                 await message.edit(f"Dinheiro guardado no banco. Seu total é de {current_xp}")
-                await message.remove_reaction(reaction, user)
+                await message.remove_reaction(reaction, user) # ESSA PORRA DE LSP TÁ DANDO ERRO MAS FODASE EU NÃO LIGO
                 break
                 # ending the loop if user doesn't react after x seconds
     
