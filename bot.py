@@ -197,7 +197,8 @@ def command_used():
     if Path(f"comandos_usados").exists() is False:
         with open(f'comandos_usados', 'w') as f:
             f.write("0")
-    current_xp = int(open(f"comandos_usados", "r+").read())
+    with open(f"comandos_usados", "r") as f:
+        current_xp = int(f.read())
     with open(f'comandos_usados', 'w') as f:
         f.write(str(current_xp + 1))
 
@@ -215,18 +216,20 @@ def dar_conquistas(user_id: int, conquista: str):
 # Define the XP functions we need.
 def increase_xp(user_sent, amount: int, guild: int):
     checkprofile(user_sent)
-    if open(f"profile/{user_sent}/experience-{guild}", "r+").read() == '':
-        with open(f'profile/{user_sent}/experience-{guild}', 'w') as f:
-            f.write("0")
-    current_xp = int(float(open(f"profile/{user_sent}/experience-{guild}", "r+").read()))
-    with open(f'profile/{user_sent}/experience-{guild}', 'w') as f:
+    file_path = f"profile/{user_sent}/experience-{guild}"
+    with open(file_path, "r") as f:
+        content = f.read().strip()
+        current_xp = 0 if content == '' else int(float(content))
+    with open(file_path, 'w') as f:
         f.write(str(current_xp + amount))
 
 
 def decrease_xp(user_sent, amount: int, guild: int):
     checkprofile(user_sent)
-    current_xp = int(float(open(f"profile/{user_sent}/experience-{guild}", "r+").read()))
-    with open(f'profile/{user_sent}/experience-{guild}', 'w') as f:
+    file_path = f"profile/{user_sent}/experience-{guild}"
+    with open(file_path, "r") as f:
+        current_xp = int(float(f.read()))
+    with open(file_path, 'w') as f:
         if current_xp - amount < 0:
             f.write("0")
         else:
@@ -235,16 +238,20 @@ def decrease_xp(user_sent, amount: int, guild: int):
 
 def increase_coins(user_sent, amount: int):
     checkprofile(user_sent)
-    current_xp = int(float(open(f"profile/{user_sent}/coins", "r+").read())) + amount
-    with open(f'profile/{user_sent}/coins', 'w') as f:
+    file_path = f"profile/{user_sent}/coins"
+    with open(file_path, "r") as f:
+        current_xp = int(float(f.read())) + amount
+    with open(file_path, 'w') as f:
         f.write(str(int(current_xp)))
     log_message(f"{user_sent} coins increased to {current_xp}")
 
 
 def decrease_coins(user_sent, amount: int):
     checkprofile(user_sent)
-    current_xp = int(float(open(f"profile/{user_sent}/coins", "r+").read())) - amount
-    with open(f'profile/{user_sent}/coins', 'w') as f:
+    file_path = f"profile/{user_sent}/coins"
+    with open(file_path, "r") as f:
+        current_xp = int(float(f.read())) - amount
+    with open(file_path, 'w') as f:
         if current_xp < 0:
             f.write("0")
         else:
@@ -329,23 +336,28 @@ def rank_command(arg1, multiplier, guild):
     if arg1 == "coins":
         the_ranked_array = []
         profiles = os.listdir("profile")
-        profiles.remove("727194765610713138")
+        try:
+            profiles.remove("727194765610713138")
+        except ValueError:
+            pass
         for profile in profiles:
-            if bot.get_user(int(profile)) is None:
-                pass
-            else:
-                checkprofile(profile)
-                coins = open(f"profile/{profile}/coins", "r+").read()
-                the_ranked_array.append({'name': f'{bot.get_user(int(profile))}', 'coins': int(float(coins))})
+            user = bot.get_user(int(profile))
+            if user is None:
+                continue
+            checkprofile(profile)
+            with open(f"profile/{profile}/coins", "r") as f:
+                coins = int(float(f.read()))
+            the_ranked_array.append({'name': str(user), 'coins': coins})
         newlist = sorted(the_ranked_array, key=lambda d: d['coins'], reverse=True)
-        the_array_to_send = []
-        the_actual_array = []
         backslash = '\n'
         val = 5 * multiplier
-        for idx, thing in enumerate(newlist):
-            the_array_to_send.append(f"{idx+1} - {thing['name'].split('#')[0]}: P£ {humanize.intcomma(thing['coins'])}")
-        for i in range(val, val + 5):
-            the_actual_array.append(the_array_to_send[i])
+        start_idx = val
+        end_idx = val + 5
+        # Only build the strings we need
+        the_actual_array = []
+        for idx in range(start_idx, min(end_idx, len(newlist))):
+            thing = newlist[idx]
+            the_actual_array.append(f"{idx+1} - {thing['name'].split('#')[0]}: P£ {humanize.intcomma(thing['coins'])}")
         thing = f"""
 {backslash.join(the_actual_array)}
 """
@@ -353,25 +365,26 @@ def rank_command(arg1, multiplier, guild):
         the_ranked_array = []
         profiles = os.listdir("profile")
         for profile in profiles:
-            if bot.get_user(int(profile)) is None:
-                pass
-            else:
-                checkprofile(profile)
-                if Path(f"profile/{profile}/experience-{guild}").exists() is False:
-                    pass
-                else:
-                    checkprofile(profile)
-                    coins = open(f"profile/{profile}/experience-{guild}", "r+").read()
-                    the_ranked_array.append({'name': f'{bot.get_user(int(profile))}', 'coins': int(coins)})
+            user = bot.get_user(int(profile))
+            if user is None:
+                continue
+            checkprofile(profile)
+            xp_file = f"profile/{profile}/experience-{guild}"
+            if not Path(xp_file).exists():
+                continue
+            with open(xp_file, "r") as f:
+                coins = int(f.read())
+            the_ranked_array.append({'name': str(user), 'coins': coins})
         newlist = sorted(the_ranked_array, key=lambda d: d['coins'], reverse=True)
-        the_array_to_send = []
-        the_actual_array = []
         backslash = '\n'
         val = 5 * multiplier
-        for idx, thing in enumerate(newlist):
-            the_array_to_send.append(f"{idx+1} - {thing['name'].split('#')[0]}: {humanize.intcomma(thing['coins'])} XP")
-        for i in range(val, val + 5):
-            the_actual_array.append(the_array_to_send[i])
+        start_idx = val
+        end_idx = val + 5
+        # Only build the strings we need
+        the_actual_array = []
+        for idx in range(start_idx, min(end_idx, len(newlist))):
+            thing = newlist[idx]
+            the_actual_array.append(f"{idx+1} - {thing['name'].split('#')[0]}: {humanize.intcomma(thing['coins'])} XP")
 
         thing = f"""
 {backslash.join(the_actual_array)}
@@ -380,25 +393,26 @@ def rank_command(arg1, multiplier, guild):
         the_ranked_array = []
         profiles = os.listdir("profile")
         for profile in profiles:
-            if bot.get_user(int(profile)) is None:
-                pass
-            else:
-                checkprofile(profile)
-                if Path(f"profile/{profile}/duelos_vencidos").exists() is False:
-                    pass
-                else:
-                    checkprofile(profile)
-                    coins = open(f"profile/{profile}/duelos_vencidos", "r+").read()
-                    the_ranked_array.append({'name': f'{bot.get_user(int(profile))}', 'duelos': int(coins)})
+            user = bot.get_user(int(profile))
+            if user is None:
+                continue
+            checkprofile(profile)
+            duelos_file = f"profile/{profile}/duelos_vencidos"
+            if not Path(duelos_file).exists():
+                continue
+            with open(duelos_file, "r") as f:
+                coins = int(f.read())
+            the_ranked_array.append({'name': str(user), 'duelos': coins})
         newlist = sorted(the_ranked_array, key=lambda d: d['duelos'], reverse=True)
-        the_array_to_send = []
-        the_actual_array = []
         backslash = '\n'
         val = 5 * multiplier
-        for idx, thing in enumerate(newlist):
-            the_array_to_send.append(f"{idx+1} - {thing['name'].split('#')[0]}: {humanize.intcomma(thing['duelos'])} Duelos vencidos")
-        for i in range(val, val + 5):
-            the_actual_array.append(the_array_to_send[i])
+        start_idx = val
+        end_idx = val + 5
+        # Only build the strings we need
+        the_actual_array = []
+        for idx in range(start_idx, min(end_idx, len(newlist))):
+            thing = newlist[idx]
+            the_actual_array.append(f"{idx+1} - {thing['name'].split('#')[0]}: {humanize.intcomma(thing['duelos'])} Duelos vencidos")
 
         thing = f"""
 {backslash.join(the_actual_array)}
@@ -413,13 +427,17 @@ def create_commands_folder():
 
 def increase_punheta(user_sent, amount: int):
     checkprofile(user_sent)
-    current_xp = int(open(f"profile/{user_sent}/punhetas", "r+").read())
-    with open(f'profile/{user_sent}/punhetas', 'w') as f:
+    file_path = f"profile/{user_sent}/punhetas"
+    with open(file_path, "r") as f:
+        current_xp = int(f.read())
+    with open(file_path, 'w') as f:
         f.write(str(current_xp + amount))
 
 
 def log_message(content):
-    webhook = discord.SyncWebhook.from_url(open(f"log_url", "r+").read())
+    with open("log_url", "r") as f:
+        webhook_url = f.read().strip()
+    webhook = discord.SyncWebhook.from_url(webhook_url)
     webhook.send(content)
 
 
@@ -443,11 +461,13 @@ async def checkpremium():
         for profile in profiles:
             checkonlyjack(profile)
             for item in os.listdir(f"profile/{profile}/onlyjack/subto/"):
-                newdate1 = dateutil.parser.parse(open(f"profile/{profile}/onlyjack/subto/{item}/date", 'r+'))
+                with open(f"profile/{profile}/onlyjack/subto/{item}/date", 'r') as f:
+                    newdate1 = dateutil.parser.parse(f.read())
                 diff = newdate1 - datetime.datetime.now()
                 if diff.days >= 30:
                     shutil.rmtree(f"profile/{profile}/onlyjack/subto/{item}")
-                    current_subs = int(open(f"profile/{item}/onlyjack/subs", "r+").read())
+                    with open(f"profile/{item}/onlyjack/subs", "r") as f:
+                        current_subs = int(f.read())
                     with open(f'profile/{item}/onlyjack/subs', 'w') as f:
                         f.write(str(current_subs - 1))
             if Path(f"profile/{profile}/premium").exists() is False:
@@ -457,7 +477,8 @@ async def checkpremium():
                     bought_two.append(bot.get_user(int(profile)))
                 if bot.get_user(int(profile)) not in bought_four:
                     bought_four.append(bot.get_user(int(profile)))
-                newdate1 = dateutil.parser.parse(open(f"profile/{profile}/premium/date", 'r+'))
+                with open(f"profile/{profile}/premium/date", 'r') as f:
+                    newdate1 = dateutil.parser.parse(f.read())
                 if newdate1 + relativedelta(days=7) <= datetime.datetime.now():
                     shutil.rmtree(f"profile/{profile}/premium")
                     bought_two.remove(bot.get_user(int(profile)))
@@ -615,18 +636,22 @@ async def on_message(message):
                     else:
                         for channel in channels["channel"]:
                             channel_to_send = bot.get_channel(channel)
-                            thing = open(f'guilds/{message.guild.id}/lvup_message', "r+").read().replace("{{user}}", f"{message.author.mention}")
+                            with open(f'guilds/{message.guild.id}/lvup_message', "r") as f:
+                                thing = f.read().replace("{{user}}", f"{message.author.mention}")
                             await channel_to_send.send(thing.replace("{{level}}", f"{experience_new}"))
 
             create_commands_folder()
             commands = os.listdir(f"guilds/{message.guild.id}/custom_commands")
             command = message.content.lower().replace("d$", "")
             if message.content.lower().replace("d$", "") in commands:
-                if open(f"guilds/{message.guild.id}/custom_commands/{command.lower()}", "r+").read() == "":
+                command_file = f"guilds/{message.guild.id}/custom_commands/{command.lower()}"
+                with open(command_file, "r") as f:
+                    command_content = f.read()
+                if command_content == "":
                     await message.channel.send("Pedimos desculpas, mas este comando é inválido e será deletado agora. Agradecemos pela paciência.")
-                    os.remove(f"guilds/{message.guild.id}/custom_commands/{command.lower()}")
+                    os.remove(command_file)
                 else:
-                    await message.channel.send(open(f"guilds/{message.guild.id}/custom_commands/{command.lower()}", "r+").read())
+                    await message.channel.send(command_content)
                     command_used()
             else:
                 await bot.process_commands(message)
@@ -670,7 +695,8 @@ async def on_message(message):
                 else:
                     for channel in channels["channel"]:
                         channel_to_send = bot.get_channel(channel)
-                        thing = open(f'guilds/{message.guild.id}/lvup_message', "r+").read().replace("{{user}}", f"{message.author.mention}")
+                        with open(f'guilds/{message.guild.id}/lvup_message', "r") as f:
+                            thing = f.read().replace("{{user}}", f"{message.author.mention}")
                         await channel_to_send.send(thing.replace("{{level}}", f"{experience_new}"))
                 with open(f'profile/{message.author.id}/level-{message.guild.id}', 'w') as f:
                     f.write(experience_new)
@@ -704,7 +730,9 @@ async def on_command_error(ctx, error):
         traceback_str = ''.join(traceback.format_exception(type(error), error, error.__traceback__))
         embed.description = '```py\n%s\n```' % traceback_str
         embed.timestamp = datetime.datetime.now()
-        webhook = discord.SyncWebhook.from_url(open(f"webhook_url", "r+").read())
+        with open("webhook_url", "r") as f:
+            webhook_url = f.read().strip()
+        webhook = discord.SyncWebhook.from_url(webhook_url)
         if len(embed.description) > 4096:
             print(embed.description)
         else:
@@ -717,7 +745,9 @@ async def on_error(event, *args, **kwargs):
     embed.add_field(name='Event', value=event)
     embed.description = '```py\n%s\n```' % traceback.format_exc()
     embed.timestamp = datetime.datetime.now()
-    webhook = discord.SyncWebhook.from_url(open(f"webhook_url", "r+").read())
+    with open("webhook_url", "r") as f:
+        webhook_url = f.read().strip()
+    webhook = discord.SyncWebhook.from_url(webhook_url)
     webhook.send(embed=embed)
 
 
@@ -2908,4 +2938,6 @@ async def work(ctx):
 
 # bot.remove_command('help')
 
-bot.run(open(sys.argv[1], "r+").read(), log_level=logging.INFO)
+with open(sys.argv[1], "r") as f:
+    bot_token = f.read().strip()
+bot.run(bot_token, log_level=logging.INFO)
