@@ -533,7 +533,9 @@ async def daily_bank_tax():
 @bot.event
 async def on_ready():
     print(f'Logged on as {bot.user}!')
-    await bot.change_presence(activity=discord.CustomActivity(name=f"{open(f'custom_status', 'r+').read()} | d$help", emoji='👀'))
+    with open('custom_status', 'r') as f:
+        status = f.read().strip()
+    await bot.change_presence(activity=discord.CustomActivity(name=f"{status} | d$help", emoji='👀'))
     if 'rpg' in bot.extensions:
         # Extension is already loaded, do nothing
         pass
@@ -553,7 +555,8 @@ def setup_experience(message):
         with open(f'profile/{message.author.id}/experience-{message.guild.id}', 'w') as f:
             f.write("0")
     if Path(f"profile/{message.author.id}/level-{message.guild.id}").exists() is False:
-        experienceweird = open(f'profile/{message.author.id}/experience-{message.guild.id}', 'r+').read()
+        with open(f'profile/{message.author.id}/experience-{message.guild.id}', 'r') as f:
+            experienceweird = f.read()
         experienceweird = experienceweird[:-3]
         with open(f'profile/{message.author.id}/level-{message.guild.id}', 'w') as f:
             if experienceweird == '':
@@ -619,8 +622,10 @@ async def on_message(message):
             else:
                 msg_xp = 2
             increase_xp(message.author.id, msg_xp, message.guild.id)
-            experience_old = open(f'profile/{message.author.id}/level-{message.guild.id}', 'r+').read()
-            experience_new = open(f'profile/{message.author.id}/experience-{message.guild.id}', 'r+').read()
+            with open(f'profile/{message.author.id}/level-{message.guild.id}', 'r') as f:
+                experience_old = f.read()
+            with open(f'profile/{message.author.id}/experience-{message.guild.id}', 'r') as f:
+                experience_new = f.read()
             experience_new = experience_new[:-3]
             if experience_new == '':
                 pass
@@ -680,8 +685,10 @@ async def on_message(message):
         else:
             msg_xp = 2
         increase_xp(message.author.id, msg_xp, message.guild.id)
-        experience_old = open(f'profile/{message.author.id}/level-{message.guild.id}', 'r+').read()
-        experience_new = open(f'profile/{message.author.id}/experience-{message.guild.id}', 'r+').read()
+        with open(f'profile/{message.author.id}/level-{message.guild.id}', 'r') as f:
+            experience_old = f.read()
+        with open(f'profile/{message.author.id}/experience-{message.guild.id}', 'r') as f:
+            experience_new = f.read()
         experience_new = experience_new[:-3]
         if experience_new == '':
             pass
@@ -771,7 +778,9 @@ async def on_member_join(member):
         for channel in channels["channels"]:
             channel_to_send = bot.get_channel(channel)
             try:
-                await channel_to_send.send(open(f"guilds/{member.guild.id}/welcome_message", "r+").read().replace("{{user}}", f"{member.mention}"))
+                with open(f"guilds/{member.guild.id}/welcome_message", "r") as f:
+                    welcome_msg = f.read().replace("{{user}}", f"{member.mention}")
+                await channel_to_send.send(welcome_msg)
             except Exception:
                 print("We can't put this shit up, no perms. Bailing out.")
 
@@ -865,8 +874,7 @@ class LevelModal(BaseModal, title="Mensagem de LevelUp"):
         await interaction.response.defer()
         with open(f'guilds/{interaction.guild_id}/lvup_message', 'w') as f:
             f.write(self.tag_content.value)
-        message = open(f"guilds/{interaction.guild_id}/lvup_message", "r+").read().replace("{{user}}", "{usuário mencionado}")
-        message = message.replace("{{level}}", "{nível}")
+        message = self.tag_content.value.replace("{{user}}", "{usuário mencionado}").replace("{{level}}", "{nível}")
         await interaction.followup.send(f"Sua mensagem foi registrada! ela vai ficar assim:\n\n{message}", ephemeral=True)
         await super().on_submit(interaction)
 
@@ -927,7 +935,9 @@ async def say(ctx, channel, arg):
 @commands.cooldown(1, cooldown_command, commands.BucketType.user)
 async def updatestatus(ctx):
     if ctx.author.id == 727194765610713138:
-        await bot.change_presence(activity=discord.CustomActivity(name=f"{open(f'custom_status', 'r+').read()} | d$help", emoji='👀'))
+        with open('custom_status', 'r') as f:
+            status = f.read().strip()
+        await bot.change_presence(activity=discord.CustomActivity(name=f"{status} | d$help", emoji='👀'))
     else:
         await ctx.send("Esse comando não existe. Desculpe!")
 
@@ -1123,7 +1133,7 @@ class TagModal(BaseModal, title="Mensagem de boas vindas"):
         await interaction.response.defer()
         with open(f'guilds/{interaction.guild_id}/welcome_message', 'w') as f:
             f.write(self.tag_content.value)
-        message = open(f"guilds/{interaction.guild_id}/welcome_message", "r+").read().replace("{{user}}", "{usuário mencionado}")
+        message = self.tag_content.value.replace("{{user}}", "{usuário mencionado}")
         await interaction.followup.send(f"Sua mensagem foi registrada! ela vai ficar assim:\n\n{message}", ephemeral=True)
         await super().on_submit(interaction)
 
@@ -1172,7 +1182,9 @@ async def sobre(ctx):
     embed = discord.Embed(title=f'{bot_name}', colour=0x00b0f4)
     embed.set_thumbnail(url=bot.user.display_avatar)
     embed.add_field(name="Tempo Ligado:", value=uptime(), inline=True)
-    embed.add_field(name="Comandos Usados:", value=open(f"comandos_usados", "r+").read(), inline=True)
+    with open("comandos_usados", "r") as f:
+        commands_used = f.read()
+    embed.add_field(name="Comandos Usados:", value=commands_used, inline=True)
     embed.add_field(name="Perfis disponíveis:", value=f"{len(list)} perfis", inline=False)
     embed.set_footer(text=f"Feito por Jocadbz - v{version}",
                      icon_url=the_user.display_avatar)
