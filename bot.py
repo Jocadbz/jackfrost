@@ -259,6 +259,14 @@ def decrease_coins(user_sent, amount: int):
     log_message(f"{user_sent} coins decreased to {current_xp}")
 
 
+def get_user_coins(user_id):
+    """Helper function to safely read user's coin balance"""
+    checkprofile(user_id)
+    file_path = f"profile/{user_id}/coins"
+    with open(file_path, "r") as f:
+        return int(float(f.read()))
+
+
 # Define function to check for user's folders, pretty useful.
 def checkprofile(user_sent):
     if Path(f"profile/{user_sent}").exists() is False:
@@ -1511,8 +1519,8 @@ async def lojinha(ctx, arg1: Item | None = None):
     arg1 = arg1 or None
     checkprofile(ctx.author.id)
     if arg1 == "1":
-        current_coins = open(f"profile/{ctx.author.id}/coins", "r+").read()
-        if int(float(current_coins)) >= price_1:
+        current_coins = get_user_coins(ctx.author.id)
+        if current_coins >= price_1:
             decrease_coins(ctx.author.id, price_1)
 
             await ctx.send("Você comprou o benefício 1.")
@@ -1523,8 +1531,8 @@ async def lojinha(ctx, arg1: Item | None = None):
 
             await ctx.send(f"A-Ah, m-mais que twiste!!11 você não tem {coin_name} o suficiente. *looks at you* (Dica UWU: d$comprar)")
     elif arg1 == "2":
-        current_coins = open(f"profile/{ctx.author.id}/coins", "r+").read()
-        if int(float(current_coins)) >= price_2:
+        current_coins = get_user_coins(ctx.author.id)
+        if current_coins >= price_2:
 
             await ctx.send("Você comprou o benefício 2. Primeiramente, responda a essa mensagem com o nome do comando. (Exemplo, se você colocar 'example', seu comando vai ser 'cd$example')")
 
@@ -1576,8 +1584,8 @@ async def lojinha(ctx, arg1: Item | None = None):
             await ctx.send(f"Ah mais que triste. Você não tem {coin_name} o suficiente. (Dica: d$comprar)")
 
     elif arg1 == "3":
-        current_coins = open(f"profile/{ctx.author.id}/coins", "r+").read()
-        if int(float(current_coins)) >= price_3:
+        current_coins = get_user_coins(ctx.author.id)
+        if current_coins >= price_3:
             decrease_coins(ctx.author.id, price_3)
 
             await ctx.send("Você comprou o benefício 3.")
@@ -1627,8 +1635,7 @@ async def investir(ctx, arg1: int) -> None:
         await ctx.send("Você não pode investir valores menores ou iguais a zero.")
         return
 
-    if arg1 > int(float(open(f"profile/{ctx.author.id}/coins", "r+").read())):
-
+    if arg1 > get_user_coins(ctx.author.id):
         await ctx.reply("Você não tem fundos o suficiente pra investir. (Dica: d$comprar)")
     else:
         if resultado == "win":
@@ -1676,8 +1683,7 @@ async def doar(ctx, amount: int, user: discord.Member):
         await ctx.send("Tem certeza de que esse user existe?")
     else:
         checkprofile(user.id)
-        if amount > int(open(f"profile/{ctx.author.id}/coins", "r+").read()):
-
+        if amount > get_user_coins(ctx.author.id):
             await ctx.send("Você não tem fundos o suficiente pra completar essa transação. (Dica: d$comprar)")
         else:
             if amount < 0:
@@ -1710,12 +1716,12 @@ async def adivinhar(ctx, amount: int, number: int):
         return
     possibilities = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     checkprofile(ctx.author.id)
-    if amount == int(open(f"profile/{ctx.author.id}/coins", "r+").read()):
+    user_coins = get_user_coins(ctx.author.id)
+    if amount == user_coins:
         if Path(f"profile/{ctx.author.id}/conquistas/conquista1.toml").exists() is False:
             dar_conquistas(ctx.author.id, "1")
             await ctx.send("**Conquista obtida:** *Eu confio na sorte!*")
-    if amount > int(open(f"profile/{ctx.author.id}/coins", "r+").read()):
-
+    if amount > user_coins:
         await ctx.reply("Me parece que você não pode cobrir essa aposta... (Dica: d$comprar)")
         if amount < 0:
             await ctx.send("Você não pode apostar um valor negativo ou igual a zero.")
@@ -1741,11 +1747,12 @@ async def aposta(ctx, amount: int, user: discord.Member):
 
         await ctx.send("Opaaa pera lá, você já apostou. Espere o cooldown acabar. (Dica: Você pode pular esse cooldown comprando o benefício 2 na d$lojinha)")
     else:
-        if amount == int(open(f"profile/{ctx.author.id}/coins", "r+").read()):
+        user_coins = get_user_coins(ctx.author.id)
+        if amount == user_coins:
             if Path(f"profile/{ctx.author.id}/conquistas/conquista1.toml").exists() is False:
                 dar_conquistas(ctx.author.id, "1")
                 await ctx.send("**Conquista obtida:** *Eu confio na sorte!*")
-        if amount > int(open(f"profile/{ctx.author.id}/coins", "r+").read()):
+        if amount > user_coins:
             await ctx.send("Você não tem fundos o suficiente pra apostar. (Dica: d$comprar)")
             return
         if amount < 0:
@@ -1757,8 +1764,7 @@ async def aposta(ctx, amount: int, user: discord.Member):
                 await ctx.send("Você não pode apostar com você mesmo.")
             else:
                 checkprofile(user.id)
-                if amount > int(open(f"profile/{user.id}/coins", "r+").read()):
-
+                if amount > get_user_coins(user.id):
                     await ctx.send("Me parece que seu oponente não pode cobrir essa aposta... (Dica: d$comprar)")
                 else:
 
